@@ -1,5 +1,14 @@
 <?php
 
+
+/*
+* miniOrm
+* Version: 1.0.0
+* Copyright : Cédric Mouleyre / @MrManchot
+*/
+ 
+ 
+ 
 /*** Configuration ***/
 /*
 define('_DB_NAME_', 'mini_orm');
