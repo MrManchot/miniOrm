@@ -33,56 +33,56 @@ define('_FREEZE_', false);
 include ('miniOrm.php');
 
 // Start using object : no configuration !
-$myCharacter = new Obj('character');
+$myCharacter= new Obj('character');
 // Php Exception, test if the value size is correct
-$myCharacter -> name = 'Conan the barbarian who has a really really long name';
+$myCharacter->name= 'Conan the barbarian who has a really really long name';
 // Set value
-$myCharacter -> name = 'Conan';
+$myCharacter->name= 'Conan';
 // Php Exception, test if the type is correct
-$myCharacter -> damage = 'XX';
+$myCharacter->damage= 'XX';
 // Set value
-$myCharacter -> damage = 10;
+$myCharacter->damage= 10;
 // you may also use :
-$myCharacter -> hydrate(array('name' => 'Conan', 'damage' => 10));
-$myCharacter -> insert();
+$myCharacter->hydrate(array('name' => 'Conan', 'damage' => 10));
+$myCharacter->insert();
 // Select Obj by Id or by Where conditions
-$firstCharacter = Obj::load(1, 'character');
-$firstCharacter = Obj::load(array("name = 'Conan'"), 'character');
-echo 'Character damage : ' . $firstCharacter -> damage . '<br/>';
-$firstCharacter -> damage = 12;
-echo 'Character damage : ' . $firstCharacter -> damage . '<br/>';
-$firstCharacter -> update();
+$firstCharacter= Obj::load(1, 'character');
+$firstCharacter= Obj::load(array("name = 'Conan'"), 'character');
+echo 'Character damage : ' . $firstCharacter->damage . '<br/>';
+$firstCharacter->damage= 12;
+echo 'Character damage : ' . $firstCharacter->damage . '<br/>';
+$firstCharacter->update();
 // $firstCharacter->save();  Save update if exist, insert else
-$firstCharacter -> delete();
+$firstCharacter->delete();
 
 // You can extend easily an Obj
 
 class Character extends Obj {
 
 	// Can define relation table, load the Race object for the id_race field
-	public $relations = array( array('table' => 'race', 'field' => 'id_race'));
+	public $relations= array( array('table' => 'race', 'field' => 'id_race'));
 
 	// Shortcut
 	public function __construct() {
 		return parent::__construct('character');
 	}
 
-	public static function load($findme, $table = 'character') {
+	public static function load($findme, $table= 'character') {
 		return parent::load($findme, $table);
 	}
 
 	// Extends the set function
 	// Call setDamage ( 'set' + 'damage' in camel case) before set in in the object
 	public function setDamage($damage) {
-		$maxDamage = 0;
+		$maxDamage= 0;
 		switch ($this->race->name) {
 			case 'Orc' :
-				$maxDamage = 10;
+				$maxDamage= 10;
 			case 'Human' :
-				$maxDamage = 8;
+				$maxDamage= 8;
 		}
 		if ($damage > $maxDamage)
-			$damage = $maxDamage;
+			$damage= $maxDamage;
 		return $damage;
 	}
 
@@ -90,38 +90,38 @@ class Character extends Obj {
 
 // Shortcut
 // $myCharacter = new Character();
-$myCharacter = Character::load(array("name = 'Goldorak'"));
-$myCharacter -> id_race = 2;
-$myCharacter -> refreshRelation();
+$myCharacter= Character::load(array("name = 'Goldorak'"));
+$myCharacter->id_race= 2;
+$myCharacter->refreshRelation();
 // Now you have access to $myCharacter->race as an Obj
 
 // Call before the setDamage function. $myCharacter is an Human, so it damage will be 8
-$myCharacter -> damage = 12;
-echo $myCharacter -> race -> name . ' => ' . $myCharacter -> damage;
+$myCharacter->damage= 12;
+echo $myCharacter->race->name . ' => ' . $myCharacter->damage;
 // Human => 8
 
 // miniOrm provide too a simple Db access & query shortcut
 // Db::inst() return an access to your database connection
-$db = Db::inst();
+$db= Db::inst();
 // Let's create some character (notice, you have to use the table "full name")
-$db -> insert('mo_character', array('name' => 'Conan', 'damage' => 12));
-$db -> insert('mo_character', array('name' => 'Rahan', 'damage' => 8));
-$db -> insert('mo_character', array('name' => 'Toto', 'damage' => 0));
-$db -> insert('mo_character', array('name' => 'Goldorak', 'damage' => 19));
-Db::inst() -> update('mo_character', array('damage' => 1), array('name="Toto"'));
+$db->insert('mo_character', array('name' => 'Conan', 'damage' => 12));
+$db->insert('mo_character', array('name' => 'Rahan', 'damage' => 8));
+$db->insert('mo_character', array('name' => 'Toto', 'damage' => 0));
+$db->insert('mo_character', array('name' => 'Goldorak', 'damage' => 19));
+Db::inst()->update('mo_character', array('damage' => 1), array('name="Toto"'));
 // 4 type of select shortcut :
-$characterDamage = $db -> getValue('damage', 'mo_character', array('name = "Conan"'));
+$characterDamage= $db->getValue('damage', 'mo_character', array('name = "Conan"'));
 // return : 12
-$characterInformations = $db -> getRow('*', 'mo_character', array('id_character = 1'));
+$characterInformations= $db->getRow('*', 'mo_character', array('id_character = 1'));
 // return : Array ( [id_character] => 1 [name] => MrManchot [damage] => 10 )
-$twoStrongestCharacters = $db -> getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
+$twoStrongestCharacters= $db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
 // return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array ( [name] => Conan [damage] => 12 ) )
-$twoStrongestCharactersIds = $db -> getValueArray('id_character', 'mo_character', 'damage > 5');
+$twoStrongestCharactersIds= $db->getValueArray('id_character', 'mo_character', 'damage > 5');
 // return : Array ( [0] => 1 [1] => 2 [2] => 4 )
 
-$db -> delete('mo_character', array('name="Toto"'));
-$nbCharacters = $db -> count('mo_character', array('damage > 10'));
+$db->delete('mo_character', array('name="Toto"'));
+$nbCharacters= $db->count('mo_character', array('damage > 10'));
 // Try a wrong query...
-$db -> update('mo_character', array('damage' => 1), array('invalid_field="Toto"'));
-$error = $db -> error();
+$db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"'));
+$error= $db->error();
 echo '<pre>' . print_r($error, true) . '</pre>';
