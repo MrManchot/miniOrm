@@ -2,7 +2,7 @@
 
 /*
  * miniOrm
- * Version: 1.0.0
+ * Version: 1.1.0
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
@@ -13,6 +13,10 @@
  define('_DB_MDP_', '');
  define('_DB_SERVER_', 'localhost');
  define('_DB_PREFIX_', 'mo_');
+
+ define('_CACHE_FILE_', 'miniOrm.tmp');
+ define('_CACHE_DIR_', '');
+ define('_FREEZE_', false);
  */
 
 /*** Db ***/
@@ -24,9 +28,9 @@ class Db {
 
 	private function __construct($name = _DB_NAME_, $login = _DB_LOGIN_, $mdp = _DB_MDP_, $serveur = _DB_SERVER_) {
 		try {
-			$this->link = new PDO('mysql:host=' . $serveur . ';port=3306;dbname=' . $name, $login, $mdp);
+			$this -> link = new PDO('mysql:host=' . $serveur . ';port=3306;dbname=' . $name, $login, $mdp);
 		} catch(Exception $e) {
-			echo $e->getMessage();
+			echo $e -> getMessage();
 		}
 
 	}
@@ -36,7 +40,7 @@ class Db {
 		if (in_array($value, $isNotString)) {
 			return $value;
 		} else {
-			return $this->link->quote($value);
+			return $this -> link -> quote($value);
 		}
 	}
 
@@ -79,7 +83,7 @@ class Db {
 	private function getQueryInsert($table, $values) {
 		foreach ($values as $key => $value) {
 			$array_key[] = '`' . $key . '`';
-			$array_value[] = $this->quote($value);
+			$array_value[] = $this -> quote($value);
 		}
 		return 'INSERT INTO ' . $table . ' (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
 	}
@@ -87,28 +91,28 @@ class Db {
 	private function getQueryUpdate($table, $values, $where) {
 		$array_value = array();
 		foreach ($values as $key => $value) {
-			$array_value[] = $key . '=' . $this->link->quote($value);
+			$array_value[] = $key . '=' . $this -> link -> quote($value);
 		}
 		return 'UPDATE ' . $table . ' SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
 	}
 
 	public function query($q) {
-		$this->lastQuery = $q;
-		$res = $this->link->query($q);
+		$this -> lastQuery = $q;
+		$res = $this -> link -> query($q);
 		if ($res) {
 			return $res;
 		} else {
-			return $this->error();
+			return $this -> error();
 		}
 	}
 
 	public function exec($q) {
-		$this->lastQuery = $q;
-		$res = $this->link->exec($q);
+		$this -> lastQuery = $q;
+		$res = $this -> link -> exec($q);
 		if ($res) {
 			return $res;
 		} else {
-			return $this->error();
+			return $this -> error();
 		}
 	}
 
@@ -116,7 +120,7 @@ class Db {
 		$i = 0;
 		$r = array();
 		$res = self::query(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
-		while ($l = $res->fetch(PDO::FETCH_ASSOC)) {
+		while ($l = $res -> fetch(PDO::FETCH_ASSOC)) {
 			foreach ($l as $clef => $valeur)
 				$r[$i][$clef] = $valeur;
 			$i++;
@@ -162,7 +166,7 @@ class Db {
 	}
 
 	public function error() {
-		return array('query' => $this->lastQuery, 'error' => $this->link->errorInfo());
+		return array('query' => $this -> lastQuery, 'error' => $this -> link -> errorInfo());
 	}
 
 	public static function inst() {
@@ -186,57 +190,67 @@ class Obj {
 	public $relations;
 
 	public function __construct($table) {
-		$this->table = _DB_PREFIX_ . $table;
-		$result_fields = Db::inst()->query('DESCRIBE ' . $this->table);
-		while ($row_field = $result_fields->fetch()) {
-
-			$this->v[$row_field['Field']] = '';
-
-			preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
-			if (array_key_exists(1, $result))
-				$this->vDescribe[$row_field['Field']]['size'] = $result[1];
-
-			$this->vDescribe[$row_field['Field']]['type'] = substr($row_field['Type'], 0, strpos($row_field['Type'], '('));
-
-			if ($row_field['Key'] == 'PRI')
-				$this->key = $row_field['Field'];
-
+		$this -> table = _DB_PREFIX_ . $table;
+		$cacheFile = _CACHE_DIR_ . _CACHE_FILE_;
+		if (file_exists($cacheFile)) {
+			$cacheContent = file_get_contents($cacheFile);
+			$cache = unserialize($cacheContent);
 		}
-		return $this->key ? true : false;
+		if (_FREEZE_) {
+			$this -> v = $cache[$table] -> v;
+			$this -> vDescribe = $cache[$table] -> vDescribe;
+			$this -> key = $cache[$table] -> key;
+		} else {
+			$result_fields = Db::inst() -> query('DESCRIBE ' . $this -> table);
+			while ($row_field = $result_fields -> fetch()) {
+				$this -> v[$row_field['Field']] = '';
+				preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
+				if (array_key_exists(1, $result))
+					$this -> vDescribe[$row_field['Field']]['size'] = $result[1];
+				$this -> vDescribe[$row_field['Field']]['type'] = substr($row_field['Type'], 0, strpos($row_field['Type'], '('));
+				if ($row_field['Key'] == 'PRI')
+					$this -> key = $row_field['Field'];
+			}
+			$cache[$table] = $this;
+			file_put_contents($cacheFile, serialize($cache));
+			chmod($cacheFile, 0777);
+		}
+
+		return $this -> key ? true : false;
 	}
 
-	public static function load($table, $findme) {
+	public static function load($findme, $table) {
 		$calledClass = get_called_class();
 		$obj = new $calledClass($table);
-		$params = is_int($findme) ? $obj->key . '=' . $findme : $findme;
-		$obj->v = Db::inst()->getRow('*', $obj->table, $params);
-		$obj->id = $obj->v[$obj->key];
-		$obj->refreshRelation();
+		$params = is_int($findme) ? $obj -> key . '=' . $findme : $findme;
+		$obj -> v = Db::inst() -> getRow('*', $obj -> table, $params);
+		$obj -> id = $obj -> v[$obj -> key];
+		$obj -> refreshRelation();
 		return $obj;
 	}
 
 	public function refreshRelation() {
-		if (!empty($this->relations)) {
+		if (!empty($this -> relations)) {
 			foreach ($this->relations as $relation) {
-				$this->vmax[$relation['table']] = Obj::load($relation['table'], $this->__get($relation['field']));
+				$this -> vmax[$relation['table']] = Obj::load($this -> __get($relation['field']), $relation['table']);
 			}
 		}
 	}
 
 	public function insert() {
-		$this->id = Db::inst()->insert($this->table, $this->v);
+		$this -> id = Db::inst() -> insert($this -> table, $this -> v);
 	}
 
 	public function update() {
-		Db::inst()->update($this->table, $this->v, $this->key . '=' . $this->id);
+		Db::inst() -> update($this -> table, $this -> v, $this -> key . '=' . $this -> id);
 	}
 
 	public function delete() {
-		Db::inst()->delete($this->table, $this->key . '=' . $this->id);
+		Db::inst() -> delete($this -> table, $this -> key . '=' . $this -> id);
 	}
 
 	public function save() {
-		return $this->id ? $this->update() : $this->insert();
+		return $this -> id ? $this -> update() : $this -> insert();
 	}
 
 	public function __set($key, $value) {
@@ -248,27 +262,27 @@ class Obj {
 		if (method_exists($calledClass, $testMethod))
 			$value = $calledClass::$testMethod($value);
 		try {
-			if (strlen($value) > $this->vDescribe[$key]['size']) {
-				throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ')');
+			if (strlen($value) > $this -> vDescribe[$key]['size']) {
+				throw new Exception('"' . $key . '" value is too long (' . $this -> vDescribe[$key]['size'] . ')');
 			}
-			if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
+			if (in_array($this -> vDescribe[$key]['type'], $numericTypes)) {
 				if (!is_numeric($value)) {
 					throw new Exception('"' . $key . '" value should be numeric');
-				} elseif (!is_int($value) && in_array($this->vDescribe[$key]['type'], $intTypes)) {
+				} elseif (!is_int($value) && in_array($this -> vDescribe[$key]['type'], $intTypes)) {
 					throw new Exception('"' . $key . '" value should be int');
 				}
 			}
-			if (in_array($this->vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 3) {
+			if (in_array($this -> vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 3) {
 				throw new Exception('"' . $key . '" value should be date');
 			}
 		} catch(Exception $e) {
-			echo $e->getMessage() . '<br/>';
+			echo $e -> getMessage() . '<br/>';
 		}
-		$this->v[$key] = $value;
+		$this -> v[$key] = $value;
 	}
 
 	public function __get($key) {
-		$value = array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
+		$value = array_key_exists($key, $this -> vmax) ? $this -> vmax[$key] : $this -> v[$key];
 		$testMethod = 'get' . ucfirst($key);
 		if (method_exists(get_called_class(), $testMethod))
 			$value = self::$testMethod($value);
@@ -277,7 +291,7 @@ class Obj {
 
 	public function hydrate($values) {
 		foreach ($values as $key => $value) {
-			$this->__set($key, $value);
+			$this -> __set($key, $value);
 		}
 	}
 
