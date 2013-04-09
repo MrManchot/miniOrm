@@ -28,7 +28,7 @@ class Db {
 
 	private function __construct($name= _DB_NAME_, $login= _DB_LOGIN_, $mdp= _DB_MDP_, $serveur= _DB_SERVER_) {
 		try {
-			$this->link= new PDO('mysql:host=' . $serveur . ';port=3306;dbname=' . $name, $login, $mdp);
+			$this->link= new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
 		} catch(Exception $e) {
 			echo $e->getMessage();
 		}
