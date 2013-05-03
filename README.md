@@ -1,3 +1,19 @@
+miniOrm
+=======
+
+Just a mini ORM, for using Object Model and MySQL Abstraction Layer as simply as possible
+
+Todo
+--------
+* find => load several Objects
+* create(array('...')); <== new initialisation
+* dynmaic relationship (1-1 / 1-n / n-n)
+
+
+Sample
+--------
+
+```php
 <?php
 
 // First for follow the sample you have to create the DateBase :
@@ -125,3 +141,4 @@ $nbCharacters= $db->count('mo_character', array('damage > 10'));
 $db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"'));
 $error= $db->error();
 echo '<pre>' . print_r($error, true) . '</pre>';
+```
