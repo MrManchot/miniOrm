@@ -10,6 +10,134 @@ Todo
 * dynmaic relationship (1-1 / 1-n / n-n)
 
 
+Simple
+--------
+1 Table = 1 Object Model.
+Create, read, update and delete in your database without using any SQL queries. 
+
+Light-weight
+--------
+Only one file to include and you're ready.
+Don't need to configuration your tables, it automaticlly determine your database model. 
+
+Extensible
+--------
+Only one file to include and you're ready.
+Don't need to configuration your tables, it automaticlly determine your database model. 
+
+How to intall ?
+--------
+
+Just define your database connection, include the miniOrm.php file on you're ready !
+
+```php
+define('_DB_NAME_', 'mini_orm');
+define('_DB_LOGIN_', 'root');
+define('_DB_MDP_', '');
+define('_DB_SERVER_', 'localhost');
+define('_DB_PREFIX_', 'mo_');
+ 
+include('miniOrm.php');
+```
+
+Create, read, update and delete
+--------
+
+```php
+$myCharacter = new Obj('character');
+$myCharacter->name = 'Conan';
+$myCharacter->damage = 10;
+$myCharacter->insert();
+ 
+$firstCharacter = Obj::load('character', 1);
+$firstCharacter->damage = 12;
+echo 'Character damage : '.$firstCharacter->damage.'<br>';
+$firstCharacter->update();
+ 
+$firstCharacter->delete();
+```
+
+Extend your object
+--------
+
+```php
+class Charcacter extends Obj {
+     
+    // Can define relation table, load the Race object for the id_race field
+    public $relations = array(
+        array('table' => 'race', 'field' => 'id_race')
+    );
+     
+    // Shortcut
+    public function __construct() {
+        return parent::__construct('character');
+    }
+ 
+    public static function load($findme) {
+        return parent::load('character', $findme);
+    }
+ 
+    // Extends the set function
+    // Call setDamage ( 'set' + 'damage' in camel case) before set in in the object
+    public function setDamage($damage) {
+        $maxDamage = 0;
+        switch ($this->race->name) {
+            case 'Orc':
+                $maxDamage = 10;
+            case 'Human':
+                $maxDamage = 8;
+        }
+        if($damage > $maxDamage) $damage = $maxDamage;
+        return $damage;
+    }
+     
+}
+ 
+// Shortcut
+// $myCharacter = new Charcacter();
+$myCharacter = Charcacter::load(array("name = 'Goldorak'"));
+$myCharacter->id_race = 2;
+$myCharacter->refreshRelation();
+// Now you have access to $myCharacter->race as an Obj
+ 
+// Call before the setDamage function. $myCharacter is an Human, so it damage will be 8
+$myCharacter->damage = 12;
+echo $myCharacter->race->name.' => '.$myCharacter->damage; // Human => 8
+```
+
+
+
+
+MySQL Abstraction Layer
+--------
+
+```php
+// Db::inst() return an access to your database connection
+$db = Db::inst();
+// Let's create some character (notice, you have to use the table "full name")
+$db->insert('mo_character', array('name' => 'Conan', 'damage' => 12));
+$db->insert('mo_character', array('name' => 'Rahan', 'damage' => 8));
+$db->insert('mo_character', array('name' => 'Toto', 'damage' => 0));
+$db->insert('mo_character', array('name' => 'Goldorak', 'damage' => 19));
+Db::inst()->update('mo_character', array('damage' => 1), array('name="Toto"') );
+// 4 type of select shortcut :
+$characterDamage = $db->getValue('damage', 'mo_character', array('name = "Conan"'));
+// return : 12
+$characterInformations = $db->getRow('*', 'mo_character', array('id_character = 1'));
+// return : Array ( [id_character] => 1 [name] => MrManchot [damage] => 10 )
+$twoStrongestCharacters = $db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
+// return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array ( [name] => Conan [damage] => 12 ) )
+$twoStrongestCharactersIds = $db->getValueArray('id_character', 'mo_character', 'damage > 5');
+// return : Array ( [0] => 1 [1] => 2 [2] => 4 )
+ 
+$db->delete('mo_character', array('name="Toto"') );
+$nbCharacters = $db->count('mo_character', array('damage > 10'));
+// Try a wrong query...
+$db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"') );
+$error = $db->error();
+```
+
+
 Sample
 --------
 
