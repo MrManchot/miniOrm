@@ -8,7 +8,8 @@ Todo
 * find => load several Objects
 * create(array('...')); // new Obj('character', array('...'));
 * dynamic relationship (1-1 / 1-n / n-n)
-* prefix php define
+* prefix php define + initialisation
+
 
 Simple
 --------
