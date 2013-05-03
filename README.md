@@ -6,9 +6,9 @@ Just a mini ORM, for using Object Model and MySQL Abstraction Layer as simply as
 Todo
 --------
 * find => load several Objects
-* create(array('...')); <== new initialisation
-* dynmaic relationship (1-1 / 1-n / n-n)
-
+* create(array('...')); // new Obj('character', array('...'));
+* dynamic relationship (1-1 / 1-n / n-n)
+* prefix php define
 
 Simple
 --------
@@ -138,7 +138,7 @@ $error = $db->error();
 ```
 
 
-Sample
+Full Sample
 --------
 
 ```php
