@@ -2,23 +2,12 @@
 
 /*
  * miniOrm
- * Version: 1.1.0
+ * Version: 1.2.0
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
-/*** Configuration ***/
-/*
- define('_DB_NAME_', 'mini_orm');
- define('_DB_LOGIN_', 'root');
- define('_DB_MDP_', '');
- define('_DB_SERVER_', 'localhost');
- define('_DB_PREFIX_', 'mo_');
-
- define('_CACHE_FILE_', 'miniOrm.tmp');
- define('_CACHE_DIR_', '');
- define('_FREEZE_', false);
- */
-
+include('miniOrm.config.php');
+ 
 /*** Db ***/
 class Db {
 
@@ -26,7 +15,7 @@ class Db {
 	private $lastQuery;
 	private static $mysql;
 
-	private function __construct($name= _DB_NAME_, $login= _DB_LOGIN_, $mdp= _DB_MDP_, $serveur= _DB_SERVER_) {
+	private function __construct($name= _MO_DB_NAME_, $login= _MO_DB_LOGIN_, $mdp= _MO_DB_MDP_, $serveur= _MO_DB_SERVER_) {
 		try {
 			$this->link= new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
 		} catch(Exception $e) {
@@ -190,13 +179,13 @@ class Obj {
 	public $relations;
 
 	public function __construct($table) {
-		$this->table= _DB_PREFIX_ . $table;
-		$cacheFile= _CACHE_DIR_ . _CACHE_FILE_;
+		$this->table= _MO_DB_PREFIX_ . $table;
+		$cacheFile= _MO_CACHE_DIR_ . _MO_CACHE_FILE_;
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
 		}
-		if (_FREEZE_) {
+		if (_MO_FREEZE_) {
 			$this->v= $cache[$table]->v;
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;

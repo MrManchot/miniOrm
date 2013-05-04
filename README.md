@@ -8,7 +8,6 @@ Todo
 * find => load several Objects
 * create(array('...')); // new Obj('character', array('...'));
 * dynamic relationship (1-1 / 1-n / n-n)
-* prefix php define + initialisation
 
 
 Simple
@@ -19,25 +18,17 @@ Create, read, update and delete in your database without using any SQL queries.
 Light-weight
 --------
 Only one file to include and you're ready.
-Don't need to configuration your tables, it automaticlly determine your database model. 
+Don't need to configuration your tables, miniOrm automaticlly determine your database model. 
 
 Extensible
 --------
-Only one file to include and you're ready.
-Don't need to configuration your tables, it automaticlly determine your database model. 
+Extend your object, create easily relation between it, overdie how to set values, automaticly validate fields & type and size and more... 
 
 How to intall ?
 --------
-
-Just define your database connection, include the miniOrm.php file on you're ready !
+Just define your database connection in miniOrm.config.php, include the miniOrm.php file on you're ready !
 
 ```php
-define('_DB_NAME_', 'mini_orm');
-define('_DB_LOGIN_', 'root');
-define('_DB_MDP_', '');
-define('_DB_SERVER_', 'localhost');
-define('_DB_PREFIX_', 'mo_');
- 
 include('miniOrm.php');
 ```
 
@@ -52,7 +43,6 @@ $myCharacter->insert();
  
 $firstCharacter = Obj::load('character', 1);
 $firstCharacter->damage = 12;
-echo 'Character damage : '.$firstCharacter->damage.'<br>';
 $firstCharacter->update();
  
 $firstCharacter->delete();
@@ -164,16 +154,6 @@ Full Sample
 
  INSERT INTO `mo_race` (`id_race`, `name`) VALUES (1, 'Human'), (2, 'Orc');
  */
-
-define('_DB_NAME_', 'mini_orm');
-define('_DB_LOGIN_', 'root');
-define('_DB_MDP_', '');
-define('_DB_SERVER_', 'localhost');
-define('_DB_PREFIX_', 'mo_');
-
-define('_CACHE_FILE_', 'miniOrm.tmp');
-define('_CACHE_DIR_', '');
-define('_FREEZE_', false);
 
 include ('miniOrm.php');
 
