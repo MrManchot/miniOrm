@@ -178,7 +178,7 @@ class Obj {
 	protected $key;
 	public $relations;
 
-	public function __construct($table) {
+	public function __construct($table, $values = array()) {
 		$this->table= _MO_DB_PREFIX_ . $table;
 		$cacheFile= _MO_CACHE_DIR_ . _MO_CACHE_FILE_;
 		if (file_exists($cacheFile)) {
@@ -204,14 +204,31 @@ class Obj {
 			file_put_contents($cacheFile, serialize($cache));
 			chmod($cacheFile, 0777);
 		}
-
+		$this->hydrate($values);
 		return $this->key ? true : false;
+	}
+
+	public static function create($table, $values) {
+		$calledClass= get_called_class();
+		$obj= new $calledClass($table, $values);
+		$obj->insert();
+		return $obj;
+	}
+	
+	public static function find($findme, $table) {
+		$objects = array();
+		$obj = new self($table);
+		$objectsArray = Db::inst()->getArray('*', $obj->table, $findme);
+		foreach($objectsArray as $objectArray) {
+			$objects[] = self::load($objectArray[$obj->key], $table);
+		}
+		return $objects;
 	}
 
 	public static function load($findme, $table) {
 		$calledClass= get_called_class();
 		$obj= new $calledClass($table);
-		$params= is_int($findme) ? $obj->key . '=' . $findme : $findme;
+		$params= is_numeric($findme) ? $obj->key . '=' . $findme : $findme;
 		$obj->v= Db::inst()->getRow('*', $obj->table, $params);
 		$obj->id= $obj->v[$obj->key];
 		$obj->refreshRelation();

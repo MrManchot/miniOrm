@@ -1,14 +1,6 @@
 miniOrm
 =======
-
 Just a mini ORM, for using Object Model and MySQL Abstraction Layer as simply as possible
-
-Todo
---------
-* find => load several Objects
-* create(array('...')); // new Obj('character', array('...'));
-* dynamic relationship (1-1 / 1-n / n-n)
-
 
 Simple
 --------
@@ -169,7 +161,13 @@ $myCharacter->damage= 'XX';
 $myCharacter->damage= 10;
 // you may also use :
 $myCharacter->hydrate(array('name' => 'Conan', 'damage' => 10));
+// or all in one call :
+$myCharacter= new Obj('character', array('name' => 'Conan', 'damage' => 10) );
 $myCharacter->insert();
+
+// you may too, create and insert in one line :
+$myCharacter = Obj::create('character', array('name' => 'Conan', 'damage' => 10) );
+
 // Select Obj by Id or by Where conditions
 $firstCharacter= Obj::load(1, 'character');
 $firstCharacter= Obj::load(array("name = 'Conan'"), 'character');
@@ -179,6 +177,13 @@ echo 'Character damage : ' . $firstCharacter->damage . '<br/>';
 $firstCharacter->update();
 // $firstCharacter->save();  Save update if exist, insert else
 $firstCharacter->delete();
+
+
+// Get an array of you object :
+foreach(Obj::find(array("damage > 2"), 'character') as $strongCharacter) {
+	echo $strongCharacter->name.'<br/>';
+}
+
 
 // You can extend easily an Obj
 
@@ -224,30 +229,4 @@ $myCharacter->refreshRelation();
 $myCharacter->damage= 12;
 echo $myCharacter->race->name . ' => ' . $myCharacter->damage;
 // Human => 8
-
-// miniOrm provide too a simple Db access & query shortcut
-// Db::inst() return an access to your database connection
-$db= Db::inst();
-// Let's create some character (notice, you have to use the table "full name")
-$db->insert('mo_character', array('name' => 'Conan', 'damage' => 12));
-$db->insert('mo_character', array('name' => 'Rahan', 'damage' => 8));
-$db->insert('mo_character', array('name' => 'Toto', 'damage' => 0));
-$db->insert('mo_character', array('name' => 'Goldorak', 'damage' => 19));
-Db::inst()->update('mo_character', array('damage' => 1), array('name="Toto"'));
-// 4 type of select shortcut :
-$characterDamage= $db->getValue('damage', 'mo_character', array('name = "Conan"'));
-// return : 12
-$characterInformations= $db->getRow('*', 'mo_character', array('id_character = 1'));
-// return : Array ( [id_character] => 1 [name] => MrManchot [damage] => 10 )
-$twoStrongestCharacters= $db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
-// return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array ( [name] => Conan [damage] => 12 ) )
-$twoStrongestCharactersIds= $db->getValueArray('id_character', 'mo_character', 'damage > 5');
-// return : Array ( [0] => 1 [1] => 2 [2] => 4 )
-
-$db->delete('mo_character', array('name="Toto"'));
-$nbCharacters= $db->count('mo_character', array('damage > 10'));
-// Try a wrong query...
-$db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"'));
-$error= $db->error();
-echo '<pre>' . print_r($error, true) . '</pre>';
 ```
