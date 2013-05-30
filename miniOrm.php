@@ -109,10 +109,18 @@ class Db {
 		$i= 0;
 		$r= array();
 		$res= self::query(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
-		while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
-			foreach ($l as $clef => $valeur)
-				$r[$i][$clef]= $valeur;
-			$i++;
+		try {
+			if (is_array($res) && isset($res['error'][2])) {
+				throw new Exception($res['error'][2]);
+			} else {
+				while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
+					foreach ($l as $clef => $valeur)
+						$r[$i][$clef]= $valeur;
+					$i++;
+				}
+			}
+		} catch(Exception $e) {
+			echo $e->getMessage() . '<br/>';
 		}
 		return $r;
 	}
