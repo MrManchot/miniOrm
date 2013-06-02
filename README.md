@@ -2,19 +2,11 @@ miniOrm
 =======
 Just a mini ORM, for using Object Model and MySQL Abstraction Layer as simply as possible
 
-Simple
+Simple, Light-weight & Extensible
 --------
-1 Table = 1 Object Model.
-Create, read, update and delete in your database without using any SQL queries. 
-
-Light-weight
---------
-Only one file to include and you're ready.
-Don't need to configuration your tables, miniOrm automaticlly determine your database model. 
-
-Extensible
---------
-Extend your object, create easily relation between it, overdie how to set values, automaticly validate fields & type and size and more... 
++ 1 Table = 1 Object Model. Create, read, update and delete in your database without using any SQL queries. 
++ Only one file to include and you're ready. Don't need to configuration your tables, miniOrm automatically determine your database model. 
++ Extend your object, create easily relation between it, overdie how to set values, automaticly validate fields & type and size and more... 
 
 How to intall ?
 --------
