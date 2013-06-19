@@ -31,7 +31,7 @@ $myCharacter = Obj::create('character', array('name' => 'Conan', 'damage' => 10)
  
 $firstCharacter = Obj::load(1, 'character');
 $firstCharacter->damage = 12;
-$firstCharacter->update(); // Can use too save() : update() if already exist else insert()
+$firstCharacter->update(); // Can use too save() : update() if already exist, else insert()
 $firstCharacter->delete();
 
 // Get an array of you object :
@@ -96,7 +96,7 @@ $db->getValueArray('id_character', 'mo_character', 'damage > 5');
 // return : Array ( [0] => 1 [1] => 2 [2] => 4 )
  
 $db->delete('mo_character', array('name="Conan"') );
-$nbCharacters = $db->count('mo_character', array('damage > 10'));
+$db->count('mo_character', array('damage > 10'));
 // Try a wrong query...
 $db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"') );
 $error = $db->error();
