@@ -51,6 +51,7 @@ class Charcacter extends Obj {
         array('table' => 'race', 'field' => 'id_race')
     );
 
+	// Define shortcut
     public static function load($findme) {
         return parent::load('character', $findme);
     }
@@ -60,10 +61,8 @@ class Charcacter extends Obj {
     public function setDamage($damage) {
         $maxDamage = 0;
         switch ($this->race->name) {
-            case 'Orc':
-                $maxDamage = 10;
-            case 'Human':
-                $maxDamage = 8;
+            case 'Orc': $maxDamage = 10;
+            case 'Human': $maxDamage = 8;
         }
         if($damage > $maxDamage) $damage = $maxDamage;
         return $damage;
@@ -74,7 +73,7 @@ class Charcacter extends Obj {
 $myCharacter = Charcacter::load(1); // Shortcut
 $myCharacter->id_race = 2;
 $myCharacter->refreshRelation(); // Now you have access to $myCharacter->race as an Obj
-$myCharacter->damage = 12; // Call before the setDamage function. $myCharacter is an Human, so it damage will be 8
+$myCharacter->damage = 12; // Call before the setDamage function
 echo $myCharacter->race->name.' => '.$myCharacter->damage; // Human => 8
 ```
 
@@ -87,13 +86,13 @@ $db = Db::inst();
 $db->insert('mo_character', array('name' => 'Conan', 'damage' => 12));
 $db->update('mo_character', array('damage' => 1), array('name="Conan"') );
 // 4 types of select shortcut :
-$characterDamage = $db->getValue('damage', 'mo_character', array('name = "Conan"'));
+$db->getValue('damage', 'mo_character', array('name = "Conan"'));
 // return : 12
-$characterInformations = $db->getRow('*', 'mo_character', array('id_character = 1'));
+$db->getRow('*', 'mo_character', array('id_character = 1'));
 // return : Array ( [id_character] => 1 [name] => MrManchot [damage] => 10 )
-$twoStrongestCharacters = $db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
-// return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array ( [name] => Conan [damage] => 12 ) )
-$StrongCharactersIds = $db->getValueArray('id_character', 'mo_character', 'damage > 5');
+$db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
+// return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array (...
+$db->getValueArray('id_character', 'mo_character', 'damage > 5');
 // return : Array ( [0] => 1 [1] => 2 [2] => 4 )
  
 $db->delete('mo_character', array('name="Conan"') );
