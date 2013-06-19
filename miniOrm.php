@@ -2,7 +2,7 @@
 
 /*
  * miniOrm
- * Version: 1.2.0
+ * Version: 1.3
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
@@ -19,9 +19,12 @@ class Db {
 		try {
 			$this->link= new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
 		} catch(Exception $e) {
-			echo $e->getMessage();
+			self::displayError($e->getMessage());
 		}
-
+	}
+	
+	private function displayError($error) {
+		if(_MO_DEBUG_) echo '<fieldset><legend>miniOrm Error</legend>'.$error.'</fieldset>';
 	}
 
 	private function quote($value) {
@@ -71,8 +74,10 @@ class Db {
 
 	private function getQueryInsert($table, $values) {
 		foreach ($values as $key => $value) {
-			$array_key[]= '`' . $key . '`';
-			$array_value[]= $this->quote($value);
+			if($value) {
+				$array_key[]= '`' . $key . '`';
+				$array_value[]= $this->quote($value);
+			}
 		}
 		return 'INSERT INTO ' . $table . ' (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
 	}
@@ -86,43 +91,45 @@ class Db {
 	}
 
 	public function query($q) {
-		$this->lastQuery= $q;
-		$res= $this->link->query($q);
-		if ($res) {
-			return $res;
-		} else {
-			return $this->error();
-		}
+		$this->lastQuery = $q;
+		$res = $this->link->query($q);
+		return $this->queryResult($res);
 	}
 
+
 	public function exec($q) {
-		$this->lastQuery= $q;
-		$res= $this->link->exec($q);
-		if ($res) {
+		$this->lastQuery = $q;
+		$res= $this->link->query($q);
+		return $this->queryResult($res);
+	}
+	
+		
+	private function queryResult($res) {
+		try {
+			if(!$res) {
+				$errorInfo = $this->link->errorInfo();
+				throw new Exception('<strong>'.$errorInfo[2].'</strong> : '.$this->lastQuery);
+			} 
 			return $res;
-		} else {
-			return $this->error();
+		} catch(Exception $e) {
+			self::displayError($e->getMessage());
 		}
 	}
 
 	public function getArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
 		$i= 0;
 		$r= array();
-		$res= self::query(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
-		try {
-			if (is_array($res) && isset($res['error'][2])) {
-				throw new Exception($res['error'][2]);
-			} else {
-				while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
-					foreach ($l as $clef => $valeur)
-						$r[$i][$clef]= $valeur;
-					$i++;
-				}
+		$res = self::query(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
+		if(is_object($res)) {
+			while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
+				foreach ($l as $clef => $valeur)
+					$r[$i][$clef]= $valeur;
+				$i++;
 			}
-		} catch(Exception $e) {
-			echo $e->getMessage() . '<br/>';
+			return $r;
+		} else {
+			return false;
 		}
-		return $r;
 	}
 
 	public function getRow($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL) {
@@ -160,10 +167,6 @@ class Db {
 
 	public function update($table, $values, $where) {
 		self::exec(self::getQueryUpdate($table, $values, $where));
-	}
-
-	public function error() {
-		return array('query' => $this->lastQuery, 'error' => $this->link->errorInfo());
 	}
 
 	public static function inst() {
@@ -290,7 +293,7 @@ class Obj {
 				throw new Exception('"' . $key . '" value should be date');
 			}
 		} catch(Exception $e) {
-			echo $e->getMessage() . '<br/>';
+			Db::displayError($e->getMessage());
 		}
 		$this->v[$key]= $value;
 	}

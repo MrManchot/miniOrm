@@ -2,7 +2,7 @@
 
 /*
  * miniOrm
- * Version: 1.2.0
+ * Version: 1.3
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
@@ -18,10 +18,11 @@ define('_MO_DB_SERVER_', 'localhost');
 # Prefix for database : if your tables are like 'mo_xxxxxx', you should define as '_MO_DB_PREFIX_', 'xxxxxx'.
 # Then you can use new Obj('xxxxxx');
 define('_MO_DB_PREFIX_', 'mo_');
+# Display MySQL error
+define('_MO_DEBUG_', true);
 
 # Freeze option permitt to add to cache your database configuration.
 # Once activated, you can't access to new table dynamically : just active it in production.
 define('_MO_FREEZE_', false);
 define('_MO_CACHE_FILE_', 'miniOrm.tmp');
 define('_MO_CACHE_DIR_', '');
-

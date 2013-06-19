@@ -52,8 +52,8 @@ class Charcacter extends Obj {
     );
 
 	// Define shortcut
-    public static function load($findme) {
-        return parent::load('character', $findme);
+    public static function load($findme, $table='') {
+        return parent::load($findme, 'character');
     }
  
     // Extends the set function
@@ -99,5 +99,4 @@ $db->delete('mo_character', array('name="Conan"') );
 $db->count('mo_character', array('damage > 10'));
 // Try a wrong query...
 $db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"') );
-$error = $db->error();
 ```
