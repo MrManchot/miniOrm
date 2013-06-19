@@ -1,103 +1,312 @@
-miniOrm
-=======
-Just a mini ORM, for using Object Model and MySQL Abstraction Layer as simply as possible
+<?php
 
-Simple, Light-weight & Extensible
---------
-+ 1 Table = 1 Object Model. Create, read, update and delete in your database without using any SQL queries. 
-+ Only one file to include and you're ready. Don't need to configuration your tables, miniOrm automatically determine your database model. 
-+ Extend your object, create easily relation between it, overdie how to set values, automaticly validate fields & type and size and more... 
+/*
+ * miniOrm
+ * Version: 1.2.0
+ * Copyright : Cédric Mouleyre / @MrManchot
+ */
 
-How to intall ?
---------
-Just define your database connection in miniOrm.config.php, include the miniOrm.php file on you're ready !
-
-```php
-include('miniOrm.php');
-```
-
-Create, read, update and delete
---------
-
-```php
-$myCharacter = new Obj('character');
-$myCharacter->name = 'Conan';
-$myCharacter->damage = 10;
-// Or use hydrate() to set multiple fiels
-$myCharacter->hydrate(array('name' => 'Conan', 'damage' => 10));
-$myCharacter->insert();
-// Shortcut :
-$myCharacter = Obj::create('character', array('name' => 'Conan', 'damage' => 10));
+include('miniOrm.config.php');
  
-$firstCharacter = Obj::load(1, 'character');
-$firstCharacter->damage = 12;
-$firstCharacter->update(); // Can use too save() : update() if already exist else insert()
-$firstCharacter->delete();
+/*** Db ***/
+class Db {
 
-// Get an array of you object :
-foreach(Obj::find(array("damage > 2"), 'character') as $strongCharacter) {
-	echo $strongCharacter->name.'<br/>';
+	private $link;
+	private $lastQuery;
+	private static $mysql;
+
+	private function __construct($name= _MO_DB_NAME_, $login= _MO_DB_LOGIN_, $mdp= _MO_DB_MDP_, $serveur= _MO_DB_SERVER_) {
+		try {
+			$this->link= new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
+		} catch(Exception $e) {
+			echo $e->getMessage();
+		}
+
+	}
+
+	private function quote($value) {
+		$isNotString= array('NOW()');
+		if (in_array($value, $isNotString)) {
+			return $value;
+		} else {
+			return $this->link->quote($value);
+		}
+	}
+
+	private static function getQueryWhere($where) {
+		$sql= '';
+		if (is_array($where)) {
+			foreach ($where as $key => $param) {
+				if ($key == 0) {
+					$sql.= ' WHERE ' . $param;
+				} else {
+					$sql.= ' AND ' . $param;
+				}
+			}
+		} else {
+			return ' WHERE ' . $where;
+		}
+		return $sql;
+	}
+
+	private function getQuerySelect($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
+		$sql= 'SELECT ' . $select . ' FROM ' . $from;
+		if ($where)
+			$sql.= self::getQueryWhere($where);
+		if ($groupby)
+			$sql.= ' GROUP BY ' . $groupby;
+		if ($orderby)
+			$sql.= ' ORDER BY ' . $orderby;
+		if ($limit)
+			$sql.= ' LIMIT ' . $limit;
+		return $sql;
+	}
+
+	private function getQueryDelete($table, $where= NULL) {
+		$sql= 'DELETE FROM ' . $table;
+		if ($where)
+			$sql.= self::getQueryWhere($where);
+		return $sql;
+	}
+
+	private function getQueryInsert($table, $values) {
+		foreach ($values as $key => $value) {
+			$array_key[]= '`' . $key . '`';
+			$array_value[]= $this->quote($value);
+		}
+		return 'INSERT INTO ' . $table . ' (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
+	}
+
+	private function getQueryUpdate($table, $values, $where) {
+		$array_value= array();
+		foreach ($values as $key => $value) {
+			$array_value[]= $key . '=' . $this->link->quote($value);
+		}
+		return 'UPDATE ' . $table . ' SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
+	}
+
+	public function query($q) {
+		$this->lastQuery= $q;
+		$res= $this->link->query($q);
+		if ($res) {
+			return $res;
+		} else {
+			return $this->error();
+		}
+	}
+
+	public function exec($q) {
+		$this->lastQuery= $q;
+		$res= $this->link->exec($q);
+		if ($res) {
+			return $res;
+		} else {
+			return $this->error();
+		}
+	}
+
+	public function getArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
+		$i= 0;
+		$r= array();
+		$res= self::query(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
+		try {
+			if (is_array($res) && isset($res['error'][2])) {
+				throw new Exception($res['error'][2]);
+			} else {
+				while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
+					foreach ($l as $clef => $valeur)
+						$r[$i][$clef]= $valeur;
+					$i++;
+				}
+			}
+		} catch(Exception $e) {
+			echo $e->getMessage() . '<br/>';
+		}
+		return $r;
+	}
+
+	public function getRow($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL) {
+		$r= self::getArray($select, $from, $where, $groupby, $orderby, '0,1');
+		return $r ? $r[0] : false;
+	}
+
+	public function getValue($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL) {
+		$r= self::getArray($select, $from, $where, $groupby, $orderby, '0,1');
+		return $r[0][$select];
+	}
+
+	public function getValueArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
+		$valueArray= array();
+		$r= self::getArray($select, $from, $where, $groupby, $orderby, $limit);
+		foreach ($r as $v) {
+			$valueArray[]= $v[$select];
+		}
+		return $valueArray;
+	}
+
+	public function count($from, $where= NULL, $groupby= NULL) {
+		$r= self::getArray('COUNT(*) as count', $from, $where, $groupby);
+		return $r[0]['count'];
+	}
+
+	public function insert($table, $values) {
+		self::exec(self::getQueryInsert($table, $values));
+		return mysql_insert_id();
+	}
+
+	public function delete($table, $where) {
+		self::exec(self::getQueryDelete($table, $where));
+	}
+
+	public function update($table, $values, $where) {
+		self::exec(self::getQueryUpdate($table, $values, $where));
+	}
+
+	public function error() {
+		return array('query' => $this->lastQuery, 'error' => $this->link->errorInfo());
+	}
+
+	public static function inst() {
+		if (is_null(self::$mysql))
+			self::$mysql= new Db();
+		return self::$mysql;
+	}
+
 }
-```
 
-Extend your object
---------
+/*** Obj ***/
 
-```php
-class Charcacter extends Obj {
-     
-    // Can define relation table, load the Race object for the id_race field
-    public $relations = array(
-        array('table' => 'race', 'field' => 'id_race')
-    );
+class Obj {
 
-	// Define shortcut
-    public static function load($findme) {
-        return parent::load('character', $findme);
-    }
- 
-    // Extends the set function
-    // Call setDamage ( 'set' + 'damage' in camel case) before set in in the object
-    public function setDamage($damage) {
-        $maxDamage = 0;
-        switch ($this->race->name) {
-            case 'Orc': $maxDamage = 10;
-            case 'Human': $maxDamage = 8;
-        }
-        if($damage > $maxDamage) $damage = $maxDamage;
-        return $damage;
-    }
-     
+	public $id;
+	protected $v= array();
+	protected $vDescribe= array();
+	protected $vmax= array();
+	protected $table;
+	protected $key;
+	public $relations;
+
+	public function __construct($table, $values = array()) {
+		$this->table= _MO_DB_PREFIX_ . $table;
+		$cacheFile= _MO_CACHE_DIR_ . _MO_CACHE_FILE_;
+		if (file_exists($cacheFile)) {
+			$cacheContent= file_get_contents($cacheFile);
+			$cache= unserialize($cacheContent);
+		}
+		if (_MO_FREEZE_) {
+			$this->v= $cache[$table]->v;
+			$this->vDescribe= $cache[$table]->vDescribe;
+			$this->key= $cache[$table]->key;
+		} else {
+			$result_fields= Db::inst()->query('DESCRIBE ' . $this->table);
+			while ($row_field= $result_fields->fetch()) {
+				$this->v[$row_field['Field']]= '';
+				preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
+				if (array_key_exists(1, $result))
+					$this->vDescribe[$row_field['Field']]['size']= $result[1];
+				$this->vDescribe[$row_field['Field']]['type']= substr($row_field['Type'], 0, strpos($row_field['Type'], '('));
+				if ($row_field['Key'] == 'PRI')
+					$this->key= $row_field['Field'];
+			}
+			$cache[$table]= $this;
+			file_put_contents($cacheFile, serialize($cache));
+			chmod($cacheFile, 0777);
+		}
+		$this->hydrate($values);
+		return $this->key ? true : false;
+	}
+
+	public static function create($table, $values) {
+		$calledClass= get_called_class();
+		$obj= new $calledClass($table, $values);
+		$obj->insert();
+		return $obj;
+	}
+	
+	public static function find($findme, $table) {
+		$objects = array();
+		$obj = new self($table);
+		$objectsArray = Db::inst()->getArray('*', $obj->table, $findme);
+		foreach($objectsArray as $objectArray) {
+			$objects[] = self::load($objectArray[$obj->key], $table);
+		}
+		return $objects;
+	}
+
+	public static function load($findme, $table) {
+		$calledClass= get_called_class();
+		$obj= new $calledClass($table);
+		$params= is_numeric($findme) ? $obj->key . '=' . $findme : $findme;
+		$obj->v= Db::inst()->getRow('*', $obj->table, $params);
+		$obj->id= $obj->v[$obj->key];
+		$obj->refreshRelation();
+		return $obj;
+	}
+
+	public function refreshRelation() {
+		if (!empty($this->relations)) {
+			foreach ($this->relations as $relation) {
+				$this->vmax[$relation['table']]= Obj::load($this->__get($relation['field']), $relation['table']);
+			}
+		}
+	}
+
+	public function insert() {
+		$this->id= Db::inst()->insert($this->table, $this->v);
+	}
+
+	public function update() {
+		Db::inst()->update($this->table, $this->v, $this->key . '=' . $this->id);
+	}
+
+	public function delete() {
+		Db::inst()->delete($this->table, $this->key . '=' . $this->id);
+	}
+
+	public function save() {
+		return $this->id ? $this->update() : $this->insert();
+	}
+
+	public function __set($key, $value) {
+		$numericTypes= array('float', 'int', 'tinyint');
+		$intTypes= array('int', 'tinyint');
+		$dateTypes= array('date', 'datetime');
+		$testMethod= 'set' . ucfirst($key);
+		$calledClass= get_called_class();
+		if (method_exists($calledClass, $testMethod))
+			$value= $calledClass::$testMethod($value);
+		try {
+			if (strlen($value) > $this->vDescribe[$key]['size']) {
+				throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ')');
+			}
+			if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
+				if (!is_numeric($value)) {
+					throw new Exception('"' . $key . '" value should be numeric');
+				} elseif (!is_int($value) && in_array($this->vDescribe[$key]['type'], $intTypes)) {
+					throw new Exception('"' . $key . '" value should be int');
+				}
+			}
+			if (in_array($this->vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 3) {
+				throw new Exception('"' . $key . '" value should be date');
+			}
+		} catch(Exception $e) {
+			echo $e->getMessage() . '<br/>';
+		}
+		$this->v[$key]= $value;
+	}
+
+	public function __get($key) {
+		$value= array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
+		$testMethod= 'get' . ucfirst($key);
+		if (method_exists(get_called_class(), $testMethod))
+			$value= self::$testMethod($value);
+		return $value;
+	}
+
+	public function hydrate($values) {
+		foreach ($values as $key => $value) {
+			$this->__set($key, $value);
+		}
+	}
+
 }
- 
-$myCharacter = Charcacter::load(1); // Shortcut
-$myCharacter->id_race = 2;
-$myCharacter->refreshRelation(); // Now you have access to $myCharacter->race as an Obj
-$myCharacter->damage = 12; // Call before the setDamage function
-echo $myCharacter->race->name.' => '.$myCharacter->damage; // Human => 8
-```
-
-MySQL Abstraction Layer
---------
-
-```php
-// Db::inst() return an access to your database connection
-$db = Db::inst();
-$db->insert('mo_character', array('name' => 'Conan', 'damage' => 12));
-$db->update('mo_character', array('damage' => 1), array('name="Conan"') );
-// 4 types of select shortcut :
-$db->getValue('damage', 'mo_character', array('name = "Conan"'));
-// return : 12
-$db->getRow('*', 'mo_character', array('id_character = 1'));
-// return : Array ( [id_character] => 1 [name] => MrManchot [damage] => 10 )
-$db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
-// return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array (...
-$db->getValueArray('id_character', 'mo_character', 'damage > 5');
-// return : Array ( [0] => 1 [1] => 2 [2] => 4 )
- 
-$db->delete('mo_character', array('name="Conan"') );
-$nbCharacters = $db->count('mo_character', array('damage > 10'));
-// Try a wrong query...
-$db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"') );
-$error = $db->error();
-```
