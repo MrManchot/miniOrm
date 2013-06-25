@@ -45,16 +45,14 @@ Extend your object
 
 ```php
 class Charcacter extends Obj {
+
+	// Define
+	protected static $tableStatic = 'character';
      
     // Can define relation table, load the Race object for the id_race field
     public $relations = array(
         array('table' => 'race', 'field' => 'id_race')
     );
-
-	// Define shortcut
-    public static function load($findme, $table='') {
-        return parent::load($findme, 'character');
-    }
  
     // Extends the set function
     // Call setDamage ( 'set' + 'damage' in camel case) before set in in the object
@@ -69,8 +67,12 @@ class Charcacter extends Obj {
     }
      
 }
+
+$testCharacter = new Charcacter();
+$testCharacter->name = "Wesh";
+$testCharacter->save();
  
-$myCharacter = Charcacter::load(1); // Shortcut
+$myCharacter = Charcacter::load(1);
 $myCharacter->id_race = 2;
 $myCharacter->refreshRelation(); // Now you have access to $myCharacter->race as an Obj
 $myCharacter->damage = 12; // Call before the setDamage function

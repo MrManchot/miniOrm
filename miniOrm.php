@@ -23,7 +23,7 @@ class Db {
 		}
 	}
 	
-	private function displayError($error) {
+	public static function displayError($error) {
 		if(_MO_DEBUG_) echo '<fieldset><legend>miniOrm Error</legend>'.$error.'</fieldset>';
 	}
 
@@ -182,15 +182,16 @@ class Db {
 class Obj {
 
 	public $id;
+	public $relations;
 	protected $v= array();
 	protected $vDescribe= array();
 	protected $vmax= array();
 	protected $table;
 	protected $key;
-	public $relations;
+	protected static $tableStatic = ''; // Use when extends Obj
 
-	public function __construct($table, $values = array()) {
-		$this->table= _MO_DB_PREFIX_ . $table;
+	public function __construct($table='', $values = array()) {
+		$this->table = $table ? _MO_DB_PREFIX_.$table : _MO_DB_PREFIX_.static::$tableStatic;
 		$cacheFile= _MO_CACHE_DIR_ . _MO_CACHE_FILE_;
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
@@ -226,7 +227,8 @@ class Obj {
 		return $obj;
 	}
 	
-	public static function find($findme, $table) {
+	public static function find($findme, $table='') {
+		if(!$table) $table = static::$tableStatic;
 		$objects = array();
 		$obj = new self($table);
 		$objectsArray = Db::inst()->getArray('*', $obj->table, $findme);
@@ -236,7 +238,8 @@ class Obj {
 		return $objects;
 	}
 
-	public static function load($findme, $table) {
+	public static function load($findme, $table='') {
+		if(!$table) $table = static::$tableStatic;
 		$calledClass= get_called_class();
 		$obj= new $calledClass($table);
 		$params= is_numeric($findme) ? $obj->key . '=' . $findme : $findme;
