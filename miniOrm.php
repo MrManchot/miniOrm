@@ -158,7 +158,7 @@ class Db {
 
 	public function insert($table, $values) {
 		self::exec(self::getQueryInsert($table, $values));
-		return mysql_insert_id();
+		return $this->link->lastInsertId();
 	}
 
 	public function delete($table, $where) {
