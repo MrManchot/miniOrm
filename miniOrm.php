@@ -2,7 +2,7 @@
 
 /*
  * miniOrm
- * Version: 1.3
+ * Version: 1.4
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
@@ -12,8 +12,8 @@ include('miniOrm.config.php');
 class Db {
 
 	private $link;
-	private $lastQuery;
 	private static $mysql;
+	public $lastQuery;
 
 	private function __construct($name= _MO_DB_NAME_, $login= _MO_DB_LOGIN_, $mdp= _MO_DB_MDP_, $serveur= _MO_DB_SERVER_) {
 		try {
@@ -192,7 +192,7 @@ class Obj {
 
 	public function __construct($table='', $values = array()) {
 		$this->table = $table ? _MO_DB_PREFIX_.$table : _MO_DB_PREFIX_.static::$tableStatic;
-		$cacheFile= _MO_CACHE_DIR_ . _MO_CACHE_FILE_;
+		$cacheFile= __DIR__.'/'._MO_CACHE_DIR_ . _MO_CACHE_FILE_;
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
@@ -206,18 +206,34 @@ class Obj {
 			while ($row_field= $result_fields->fetch()) {
 				$this->v[$row_field['Field']]= '';
 				preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
-				if (array_key_exists(1, $result))
-					$this->vDescribe[$row_field['Field']]['size']= $result[1];
-				$this->vDescribe[$row_field['Field']]['type']= substr($row_field['Type'], 0, strpos($row_field['Type'], '('));
-				if ($row_field['Key'] == 'PRI')
+				$size = '';
+				if (array_key_exists(1, $result)) {
+					$size = (int)$result[1];
+					$this->vDescribe[$row_field['Field']]['size']= $size;
+				}
+				
+				$this->vDescribe[$row_field['Field']]['type'] = $size ? str_replace("(".$size.")", "", $row_field['Type']) : $row_field['Type'];
+
+				if ($row_field['Key'] == 'PRI') {
 					$this->key= $row_field['Field'];
+					$this->vDescribe[$row_field['Field']]['primary'] = true;
+				}
 			}
 			$cache[$table]= $this;
-			file_put_contents($cacheFile, serialize($cache));
-			chmod($cacheFile, 0777);
+			if(is_writable(dirname($cacheFile))) {
+				file_put_contents($cacheFile, serialize($cache));
+				chmod($cacheFile, 0777);
+			} else {
+				Db::displayError('Can\'t write : '.$cacheFile);
+			}
+
 		}
 		$this->hydrate($values);
 		return $this->key ? true : false;
+	}
+
+	public function describe() {
+		return $this->vDescribe;	
 	}
 
 	public static function create($table, $values) {
@@ -252,7 +268,7 @@ class Obj {
 	public function refreshRelation() {
 		if (!empty($this->relations)) {
 			foreach ($this->relations as $relation) {
-				$this->vmax[$relation['table']]= Obj::load($this->__get($relation['field']), $relation['table']);
+				$this->vmax[$relation['field']]= $relation['table']::load($this->__get($relation['field']));
 			}
 		}
 	}
@@ -282,7 +298,7 @@ class Obj {
 		if (method_exists($calledClass, $testMethod))
 			$value= $calledClass::$testMethod($value);
 		try {
-			if (strlen($value) > $this->vDescribe[$key]['size']) {
+			if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
 				throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ')');
 			}
 			if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
@@ -302,11 +318,15 @@ class Obj {
 	}
 
 	public function __get($key) {
-		$value= array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
+		$value= isset($this->vmax) && array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
 		$testMethod= 'get' . ucfirst($key);
 		if (method_exists(get_called_class(), $testMethod))
 			$value= self::$testMethod($value);
 		return $value;
+	}
+	
+	public function __isset($key) {
+		return array_key_exists($key, $this->v);
 	}
 
 	public function hydrate($values) {
