@@ -2,7 +2,7 @@
 
 /*
  * miniOrm
- * Version: 1.3
+ * Version: 1.4
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
