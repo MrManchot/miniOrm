@@ -44,7 +44,7 @@ Extend your object
 --------
 
 ```php
-class Charcacter extends Obj {
+class Character extends Obj {
 
 	// Define
 	protected static $tableStatic = 'character';
