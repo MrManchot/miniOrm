@@ -6,8 +6,17 @@
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
-include('miniOrm.config.php');
  
+# Initialisation
+include('miniOrm.config.php');
+
+# Autoload
+spl_autoload_register(function ($class) {
+	$classFile = __DIR__._MO_CLASS_DIR_ . $class . '.php';
+    if(file_exists($classFile)) include($classFile);
+});
+	
+
 /*** Db ***/
 class Db {
 

@@ -27,9 +27,3 @@ define('_MO_FREEZE_', false);
 define('_MO_CACHE_FILE_', 'miniOrm.tmp');
 define('_MO_CACHE_DIR_', '/');
 define('_MO_CLASS_DIR_', '/');
-
-# Autoload
-spl_autoload_register(function ($class) {
-	$classFile = __DIR__._MO_CLASS_DIR_ . $class . '.php';
-    if(file_exists($classFile)) include($classFile);
-});
