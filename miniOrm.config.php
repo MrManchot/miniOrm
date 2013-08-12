@@ -2,7 +2,7 @@
 
 /*
  * miniOrm
- * Version: 1.4
+ * Version: 1.4.1
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
@@ -25,4 +25,11 @@ define('_MO_DEBUG_', true);
 # Once activated, you can't access to new table dynamically : just active it in production.
 define('_MO_FREEZE_', false);
 define('_MO_CACHE_FILE_', 'miniOrm.tmp');
-define('_MO_CACHE_DIR_', '');
+define('_MO_CACHE_DIR_', '/');
+define('_MO_CLASS_DIR_', '/');
+
+# Autoload
+spl_autoload_register(function ($class) {
+	$classFile = __DIR__._MO_CLASS_DIR_ . $class . '.php';
+    if(file_exists($classFile)) include($classFile);
+});
