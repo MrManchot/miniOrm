@@ -51,7 +51,7 @@ class Character extends Obj {
      
     // Can define relation table, load the Race object for the id_race field
     public $relations = array(
-        array('table' => 'race', 'field' => 'id_race')
+        array('obj' => 'race', 'field' => 'id_race')
     );
  
     // Extends the set function
