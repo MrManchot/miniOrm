@@ -277,7 +277,8 @@ class Obj {
 	public function refreshRelation() {
 		if (!empty($this->relations)) {
 			foreach ($this->relations as $relation) {
-				$this->vmax[$relation['field']]= $relation['table']::load($this->__get($relation['field']));
+				$alias = isset($relation['alias']) ? $relation['alias'] : $relation['field'];
+				$this->vmax[$alias]= $relation['obj']::load($this->__get($relation['field']));
 			}
 		}
 	}
