@@ -6,6 +6,9 @@
  * Copyright : Cédric Mouleyre / @MrManchot
  */
 
+namespace miniOrm;
+use PDO;
+use Exception;
  
 # Initialisation
 include('miniOrm.config.php');
