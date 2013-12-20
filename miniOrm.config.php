@@ -1,11 +1,5 @@
 <?php
 
-/*
- * miniOrm
- * Version: 1.4.1
- * Copyright : Cédric Mouleyre / @MrManchot
- */
-
 ### Required fields
 
 define('_MO_DB_NAME_', 'mini_orm');
@@ -25,5 +19,5 @@ define('_MO_DEBUG_', true);
 # Once activated, you can't access to new table dynamically : just active it in production.
 define('_MO_FREEZE_', false);
 define('_MO_CACHE_FILE_', 'miniOrm.tmp');
-define('_MO_CACHE_DIR_', '/');
-define('_MO_CLASS_DIR_', '/');
+define('_MO_CACHE_DIR_', '/cache/');
+define('_MO_CLASS_DIR_', '/class/');
