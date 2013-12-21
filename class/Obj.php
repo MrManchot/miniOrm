@@ -13,7 +13,7 @@ class Obj {
 
 	public function __construct($table='', $values = array()) {
 		$this->table = $table ? _MO_DB_PREFIX_.$table : _MO_DB_PREFIX_.static::$tableStatic;
-		$cacheFile= __DIR__.'/'._MO_CACHE_DIR_ . _MO_CACHE_FILE_;
+		$cacheFile= _MO_DIR_._MO_CACHE_DIR_ . _MO_CACHE_FILE_;
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
