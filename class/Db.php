@@ -11,6 +11,7 @@ class Db {
 			$this->link= new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
 		} catch(Exception $e) {
 			self::displayError($e->getMessage());
+			die();
 		}
 	}
 	

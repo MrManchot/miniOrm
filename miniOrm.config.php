@@ -2,16 +2,16 @@
 
 ### Required fields
 
-define('_MO_DB_NAME_', 'mini_orm');
+define('_MO_DB_NAME_', 'spip');
 define('_MO_DB_LOGIN_', 'root');
-define('_MO_DB_MDP_', 'emoxa');
+define('_MO_DB_MDP_', '');
 define('_MO_DB_SERVER_', 'localhost');
 
 ### Optional fields
 
 # Prefix for database : if your tables are like 'mo_xxxxxx', you should define as '_MO_DB_PREFIX_', 'xxxxxx'.
 # Then you can use new Obj('xxxxxx');
-define('_MO_DB_PREFIX_', 'mo_');
+define('_MO_DB_PREFIX_', 'spip_');
 # Display MySQL error
 define('_MO_DEBUG_', true);
 
