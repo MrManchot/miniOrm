@@ -1,1 +1,0 @@
-<h1><?php echo date('Y'); ?></h1>

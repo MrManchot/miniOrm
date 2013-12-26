@@ -1,14 +1,15 @@
 <?php
 
-class AdminController {
+class AdminController extends Obj {
 	
 		protected $viewDir; 
-		protected $vars; 
+		protected $vars;
+		public $currentObj;
 	
 	    public function __construct() {
 	    	$this->initVars();
             $this->beforeDisplay();
-            $this->displayHeader();
+			$this->displayHeader();
             $this->displayContent();
             $this->displayFooter();
         }
