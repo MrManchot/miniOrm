@@ -34,6 +34,8 @@ class Obj {
 				}
 				
 				$this->vDescribe[$row_field['Field']]['type'] = $size ? str_replace("(".$size.")", "", $row_field['Type']) : $row_field['Type'];
+				if($row_field['Extra']) $this->vDescribe[$row_field['Field']]['extra'] = $row_field['Extra'];
+				if($row_field['Default']) $this->vDescribe[$row_field['Field']]['default'] = $row_field['Default'];
 
 				if ($row_field['Key'] == 'PRI') {
 					$this->key= $row_field['Field'];
