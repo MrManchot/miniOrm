@@ -31,6 +31,7 @@ class AdminHelperForm {
 
 			$colSize = 9;
 			$maxlength = isset($inputInfo['size']) ? $inputInfo['size'] : null;
+			$placeholder = '';
 
 			if(in_array($inputInfo['type'], array("text", "mediumtext", "longtext"))) {
 				$htmlInput = '<textarea name="'.$inputName.'" class="form-control"></textarea>'."\n";
@@ -45,6 +46,9 @@ class AdminHelperForm {
 					$colSize = 3;
 					$type = "number";
 				} else {
+					
+					if(isset($inputInfo['default'])) $placeholder = $inputInfo['default'];
+					
 					if($maxlength < 20) {
 						$colSize = 3;
 					} elseif($maxlength < 20) {
@@ -52,7 +56,10 @@ class AdminHelperForm {
 					}
 					$type = "text";
 				}
-				$htmlInput = '<input type="'.$type.'" '.($maxlength ? 'maxlength="'.$maxlength.'"' : '' ).' class="form-control input-'.$type.'" name="'.$inputName.'" />'."\n";
+				$htmlInput = '<input type="'.$type.'" '.
+				($maxlength ? 'maxlength="'.$maxlength.'"' : '' ).
+				($placeholder ? 'placeholder="'.$placeholder.'"' : '' ).
+				' class="form-control input-'.$type.'" name="'.$inputName.'" />'."\n";
 			}
 			return '<div class="col-sm-'.$colSize.'">'."\n".$htmlInput.'</div>'."\n";
 		}

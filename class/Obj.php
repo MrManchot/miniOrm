@@ -25,15 +25,24 @@ class Obj {
 		} else {
 			$result_fields= Db::inst()->query('DESCRIBE ' . $this->table);
 			while ($row_field= $result_fields->fetch()) {
-				$this->v[$row_field['Field']]= '';
-				preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
-				$size = '';
-				if (array_key_exists(1, $result)) {
-					$size = (int)$result[1];
-					$this->vDescribe[$row_field['Field']]['size']= $size;
-				}
 				
-				$this->vDescribe[$row_field['Field']]['type'] = $size ? str_replace("(".$size.")", "", $row_field['Type']) : $row_field['Type'];
+				$this->v[$row_field['Field']]= '';
+				
+				preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
+				if (array_key_exists(1, $result)) {
+					$param = $result[1];		
+					$this->vDescribe[$row_field['Field']]['type'] = $param ? str_replace("(".$param.")", "", $row_field['Type']) : $row_field['Type'];
+					if($this->vDescribe[$row_field['Field']]['type']=='enum') {
+						$list = explode(',', $param);
+						foreach($list as &$listElem) {
+							$listElem = substr($listElem, 1 , -1);
+						}
+						$this->vDescribe[$row_field['Field']]['list']= $list;
+					} else {
+						$this->vDescribe[$row_field['Field']]['size']= $param;
+					}
+				}
+
 				if($row_field['Extra']) $this->vDescribe[$row_field['Field']]['extra'] = $row_field['Extra'];
 				if($row_field['Default']) $this->vDescribe[$row_field['Field']]['default'] = $row_field['Default'];
 
