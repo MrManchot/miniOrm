@@ -31,7 +31,7 @@ class Obj {
 				preg_match('#\(+(.*)\)+#', $row_field['Type'], $result);
 				if (array_key_exists(1, $result)) {
 					$param = $result[1];		
-					$this->vDescribe[$row_field['Field']]['type'] = $param ? str_replace("(".$param.")", "", $row_field['Type']) : $row_field['Type'];
+					$this->vDescribe[$row_field['Field']]['type'] = str_replace("(".$param.")", "", $row_field['Type']);
 					if($this->vDescribe[$row_field['Field']]['type']=='enum') {
 						$list = explode(',', $param);
 						foreach($list as &$listElem) {
@@ -41,6 +41,8 @@ class Obj {
 					} else {
 						$this->vDescribe[$row_field['Field']]['size']= $param;
 					}
+				} else {
+					$this->vDescribe[$row_field['Field']]['type'] = $row_field['Type'];
 				}
 
 				if($row_field['Extra']) $this->vDescribe[$row_field['Field']]['extra'] = $row_field['Extra'];

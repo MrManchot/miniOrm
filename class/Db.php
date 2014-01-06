@@ -82,12 +82,6 @@ class Db {
 		return 'UPDATE ' . $table . ' SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
 	}
 
-	public function query($q) {
-		$this->lastQuery = $q;
-		$res = $this->link->query($q);
-		return $this->queryResult($res);
-	}
-
 
 	public function exec($q) {
 		$this->lastQuery = $q;
@@ -111,7 +105,7 @@ class Db {
 	public function getArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
 		$i= 0;
 		$r= array();
-		$res = self::query(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
+		$res = self::exec(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
 		if(is_object($res)) {
 			while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
 				foreach ($l as $clef => $valeur)

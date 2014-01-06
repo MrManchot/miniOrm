@@ -31,10 +31,18 @@ class AdminHelperForm {
 
 			$colSize = 9;
 			$maxlength = isset($inputInfo['size']) ? $inputInfo['size'] : null;
-			$placeholder = '';
+			$placeholder = isset($inputInfo['default']) ? $inputInfo['default'] : null;
 
 			if(in_array($inputInfo['type'], array("text", "mediumtext", "longtext"))) {
 				$htmlInput = '<textarea name="'.$inputName.'" class="form-control"></textarea>'."\n";
+			} elseif($inputInfo['type'] == 'enum') {
+				$htmlInput = '<select name="'.$inputName.'" class="form-control">';
+				foreach($inputInfo['list'] as $option) {
+					$htmlInput .= '<option value="'.$option.'"'.($placeholder==$option ? ' selected="selected"' : '' ).'>'.
+						$option.
+					'</option>'."\n";
+				}
+				$htmlInput .= '</select>'."\n";
 			} else {
 				if($inputInfo['type']=="date") {
 					$colSize = 6;
@@ -46,9 +54,6 @@ class AdminHelperForm {
 					$colSize = 3;
 					$type = "number";
 				} else {
-					
-					if(isset($inputInfo['default'])) $placeholder = $inputInfo['default'];
-					
 					if($maxlength < 20) {
 						$colSize = 3;
 					} elseif($maxlength < 20) {
