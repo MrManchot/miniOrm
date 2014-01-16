@@ -151,7 +151,11 @@ class Obj {
 		} catch(Exception $e) {
 			Db::displayError($e->getMessage());
 		}
-		$this->v[$key]= $value;
+		if(array_key_exists($key, $this->v)) {
+			$this->v[$key]= $value;
+		} else {
+			$this->vmax[$key]= $value;
+		}
 	}
 
 	public function __get($key) {
