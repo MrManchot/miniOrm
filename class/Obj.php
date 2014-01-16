@@ -161,8 +161,9 @@ class Obj {
 	public function __get($key) {
 		$value= isset($this->vmax) && array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
 		$testMethod= 'get' . ucfirst($key);
-		if (method_exists(get_called_class(), $testMethod))
-			$value= self::$testMethod($value);
+		$calledClass= get_called_class();
+		if (method_exists($calledClass, $testMethod))
+			$value= $calledClass::$testMethod($value);
 		return $value;
 	}
 	
