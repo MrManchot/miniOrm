@@ -102,10 +102,12 @@ class Db {
 		}
 	}
 
-	public function getArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
+	public function getArray($select, $from=NULL , $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
 		$i= 0;
 		$r= array();
-		$res = self::exec(self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit));
+		# If only one parameter : first parameter is the full query
+		$q = is_null($from) ? $select : self::getQuerySelect($select, $from, $where, $groupby, $orderby, $limit);
+		$res = self::exec($q);
 		if(is_object($res)) {
 			while ($l= $res->fetch(PDO::FETCH_ASSOC)) {
 				foreach ($l as $clef => $valeur)
