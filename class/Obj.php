@@ -128,7 +128,7 @@ class Obj {
 		$numericTypes= array('float', 'int', 'tinyint');
 		$intTypes= array('int', 'tinyint');
 		$dateTypes= array('date', 'datetime');
-		$testMethod= 'set' . ucfirst($key);
+		$testMethod= 'set_' . $key;
 		$calledClass= get_called_class();
 		if (method_exists($calledClass, $testMethod))
 			$value= $calledClass::$testMethod($value);
@@ -160,7 +160,7 @@ class Obj {
 
 	public function __get($key) {
 		$value= isset($this->vmax) && array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
-		$testMethod= 'get' . ucfirst($key);
+		$testMethod= 'get_' . $key;
 		$calledClass= get_called_class();
 		if (method_exists($calledClass, $testMethod))
 			$value= $calledClass::$testMethod($value);
