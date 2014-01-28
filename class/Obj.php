@@ -56,7 +56,7 @@ class Obj {
 			$cache[$table]= $this;
 			if(is_writable(dirname($cacheFile))) {
 				file_put_contents($cacheFile, serialize($cache));
-				chmod($cacheFile, 0777);
+				@chmod($cacheFile, 0777);
 			} else {
 				Db::displayError('Can\'t write : '.$cacheFile);
 			}
