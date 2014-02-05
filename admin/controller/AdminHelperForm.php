@@ -11,14 +11,12 @@ class AdminHelperForm {
 			$html .= '<button type="submit" class="btn btn-primary pull-right">Submit</button>
 			</form>';
 			echo $html;
-			
-			# Debug
-			echo '<pre>'.print_r($vDescribe, true).'</pre>';
+
 		}
 		
 		private static function displayFormControl($inputName, $inputInfo) {
 			
-			if($inputInfo['extra']=='auto_increment') return;
+			if(array_key_exists('extra', $inputInfo) && $inputInfo['extra']=='auto_increment') return;
 			
 			return '<div class="form-group">'."\n".
 				'<label class="col-sm-3 control-label" for="'.$inputName.'">'.self::displayLabel($inputName).' :</label>'."\n".

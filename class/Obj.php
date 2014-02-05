@@ -9,10 +9,16 @@ class Obj {
 	protected $vmax= array();
 	protected $table;
 	protected $key;
-	protected static $tableStatic = ''; // Use when extends Obj
+	protected static $tableStatic = '';
 
 	public function __construct($table='', $values = array()) {
+		
 		$this->table = $table ? _MO_DB_PREFIX_.$table : _MO_DB_PREFIX_.static::$tableStatic;
+		if(!$this->table || $this->table==_MO_DB_PREFIX_) {
+			$this->table = false;
+			return false;
+		}
+		
 		$cacheFile= _MO_DIR_._MO_CACHE_DIR_ . _MO_CACHE_FILE_;
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
@@ -23,7 +29,8 @@ class Obj {
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;
 		} else {
-			$result_fields= Db::inst()->query('DESCRIBE ' . $this->table);
+			$result_fields= Db::inst()->exec('DESCRIBE ' . $this->table);
+
 			while ($row_field= $result_fields->fetch()) {
 				
 				$this->v[$row_field['Field']]= '';
@@ -133,20 +140,22 @@ class Obj {
 		if (method_exists($calledClass, $testMethod))
 			$value= $calledClass::$testMethod($value);
 		try {
-			if(array_key_exists('size', $this->vDescribe[$key])) {
-				if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
-					throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ')');
+			if(array_key_exists($key, $this->vDescribe)) {
+				if(array_key_exists('size', $this->vDescribe[$key])) {
+					if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
+						throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ')');
+					}
 				}
-			}
-			if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
-				if (!is_numeric($value)) {
-					throw new Exception('"' . $key . '" value should be numeric');
-				} elseif (!is_int($value) && in_array($this->vDescribe[$key]['type'], $intTypes)) {
-					throw new Exception('"' . $key . '" value should be int');
+				if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
+					if (!is_numeric($value)) {
+						throw new Exception('"' . $key . '" value should be numeric');
+					} elseif (!is_int($value) && in_array($this->vDescribe[$key]['type'], $intTypes)) {
+						throw new Exception('"' . $key . '" value should be int');
+					}
 				}
-			}
-			if (in_array($this->vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 2) {
-				throw new Exception('"' . $key . '" value should be date');
+				if (in_array($this->vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 2) {
+					throw new Exception('"' . $key . '" value should be date');
+				}
 			}
 		} catch(Exception $e) {
 			Db::displayError($e->getMessage());
@@ -159,12 +168,17 @@ class Obj {
 	}
 
 	public function __get($key) {
-		$value= isset($this->vmax) && array_key_exists($key, $this->vmax) ? $this->vmax[$key] : $this->v[$key];
 		$testMethod= 'get_' . $key;
 		$calledClass= get_called_class();
-		if (method_exists($calledClass, $testMethod))
-			$value= $calledClass::$testMethod($value);
-		return $value;
+		if (method_exists($calledClass, $testMethod)) {
+			return $calledClass::$testMethod($value);
+		} elseif(isset($this->vmax) && array_key_exists($key, $this->vmax)) {
+			return $this->vmax[$key];
+		} elseif(isset($this->v) && array_key_exists($key, $this->v)) {
+			return $this->v[$key];
+		} else {
+			return "";
+		}
 	}
 	
 	public function __isset($key) {

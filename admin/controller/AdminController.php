@@ -1,12 +1,9 @@
 <?php
 
 class AdminController extends Obj {
-	
-		protected $viewDir; 
-		protected $vars;
-		public $currentObj;
-	
-	    public function __construct() {
+
+	    public function __construct($controller) {
+	    	$this->controller = $controller;
 	    	$this->initVars();
             $this->beforeDisplay();
 			$this->displayHeader();
@@ -16,7 +13,7 @@ class AdminController extends Obj {
 		
 		public function initVars() {
 			$this->viewDir = __DIR__.'/../view';
-			$this->vars = $_GET;
+			$this->get = $_GET;
 		}
 	
 		public function beforeDisplay() {}
@@ -26,7 +23,7 @@ class AdminController extends Obj {
 		}
 		
 		public function displayContent() {
-			require_once($this->viewDir.'/'.$this->vars['controller'].'.php');
+			require_once($this->viewDir.'/'.$this->controller.'.php');
 		}
 		
 		public function displayFooter() {

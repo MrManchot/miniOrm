@@ -3,21 +3,16 @@
 	class AdminControllerEdit extends AdminController {
 
 		public function beforeDisplay() {
-			if(class_exists($this->vars['obj'])) {
-				$obj = new $this->vars['obj']();
+			if(class_exists($this->get['obj'])) {
+				$obj = new $this->get['obj']();
 			} else {
-				$obj = new Obj($this->vars['obj']);
+				$obj = new Obj($this->get['obj']);
 			}
-			if($this->vars['id']) {
-				$this->currentObj = $obj::load($this->vars['id']);
+			if($this->id) {
+				$this->currentObj = $obj::load($this->get['id']);
 			} else {
 				$this->currentObj = $obj;
 			}
-		}
-		
-		public function displayContent() {
-			parent::displayContent();
-			AdminHelperForm::displayForm($this->currentObj->vDescribe);
 		}
 
 	}

@@ -9,4 +9,4 @@
 		
 	$controller = isset($_GET['controller']) ? $_GET['controller'] : 'home';
 	$controllerClass = 'AdminController'.ucfirst($controller);
-	new $controllerClass;
+	new $controllerClass($controller);
