@@ -67,7 +67,7 @@ class AdminHelperForm {
 			return '<div class="col-sm-'.$colSize.'">'."\n".$htmlInput.'</div>'."\n";
 		}
 
-		private static function displayLabel($name) {
+		public static function displayLabel($name) {
 			return ucfirst(str_replace('_', ' ', $name));
 		}
 	
