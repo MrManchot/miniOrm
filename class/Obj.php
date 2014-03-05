@@ -116,7 +116,10 @@ class Obj {
 	}
 
 	public function insert() {
-		$this->id= Db::inst()->insert($this->table, $this->v);
+		$this->id = sql_insertq($this->table, $this->v);
+		$identifier = $this->key;
+		$this->$identifier = $this->id;
+		return $this->id;
 	}
 
 	public function update() {
