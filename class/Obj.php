@@ -101,6 +101,7 @@ class Obj {
 		$obj= new $calledClass($table);
 		$params= is_numeric($findme) ? $obj->key . '=' . $findme : $findme;
 		$obj->v= Db::inst()->getRow('*', $obj->table, $params);
+		if(empty($obj->v)) Db::displayError('Not found : '.$table.' : '.$findme);
 		$obj->id= $obj->v[$obj->key];
 		$obj->refreshRelation();
 		return $obj;
@@ -152,9 +153,7 @@ class Obj {
 				if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
 					if (!is_numeric($value)) {
 						throw new Exception('"' . $key . '" value should be numeric');
-					} elseif (!is_int($value) && in_array($this->vDescribe[$key]['type'], $intTypes)) {
-						throw new Exception('"' . $key . '" value should be int');
-					}
+					} 
 				}
 				if (in_array($this->vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 2) {
 					throw new Exception('"' . $key . '" value should be date');
@@ -163,7 +162,7 @@ class Obj {
 		} catch(Exception $e) {
 			Db::displayError($e->getMessage());
 		}
-		if(array_key_exists($key, $this->v)) {
+		if(is_array($this->v) && array_key_exists($key, $this->v)) {
 			$this->v[$key]= $value;
 		} else {
 			$this->vmax[$key]= $value;

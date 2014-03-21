@@ -7,16 +7,22 @@ class Db {
 	public $lastQuery;
 
 	private function __construct($name= _MO_DB_NAME_, $login= _MO_DB_LOGIN_, $mdp= _MO_DB_MDP_, $serveur= _MO_DB_SERVER_) {
+		if(!$name)
+			self::displayError('Please define your database name in miniOrm.config.php');
 		try {
-			$this->link= new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
+			$this->link = new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
 		} catch(Exception $e) {
 			self::displayError($e->getMessage());
-			die();
 		}
 	}
 	
 	public static function displayError($error) {
-		if(_MO_DEBUG_) echo '<fieldset><legend>miniOrm Error</legend>'.$error.'</fieldset>';
+		$trace = debug_backtrace();
+		if(_MO_DEBUG_)
+			die('<fieldset>
+				<legend>miniOrm Error</legend>'.
+				$error.'<br/><small>'.$trace[0]['file'].' ('.$trace[0]['line'].')</small>
+			</fieldset>');
 	}
 
 	private function quote($value) {
@@ -76,7 +82,7 @@ class Db {
 
 	private function getQueryUpdate($table, $values, $where) {
 		$array_value= array();
-		foreach ($values as $key => $value) {
+		foreach ((array)$values as $key => $value) {
 			$array_value[]= $key . '=' . $this->link->quote($value);
 		}
 		return 'UPDATE ' . $table . ' SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
