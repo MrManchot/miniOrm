@@ -13,13 +13,13 @@ class Obj {
 
 	public function __construct($table='', $values = array()) {
 		
-		$this->table = $table ? _MO_DB_PREFIX_.$table : _MO_DB_PREFIX_.static::$tableStatic;
-		if(!$this->table || $this->table==_MO_DB_PREFIX_) {
+		$this->table = $table ? $table : static::$tableStatic;
+		if(!$this->table) {
 			$this->table = false;
 			return false;
 		}
 		
-		$cacheFile= _MO_DIR_._MO_CACHE_DIR_ . _MO_CACHE_FILE_;
+		$cacheFile= _MO_DIR_._MO_CACHE_DIR_ . 'miniOrm.tmp';
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
