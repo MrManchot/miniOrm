@@ -155,9 +155,6 @@ class Obj {
 						throw new Exception('"' . $key . '" value should be numeric');
 					} 
 				}
-				if (in_array($this->vDescribe[$key]['type'], $dateTypes) && mb_substr_count($value, "-") != 2) {
-					throw new Exception('"' . $key . '" value should be date');
-				}
 			}
 		} catch(Exception $e) {
 			Db::displayError($e->getMessage());
