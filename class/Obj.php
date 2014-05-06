@@ -144,15 +144,15 @@ class Obj {
 		if (method_exists($calledClass, $testMethod))
 			$value= $calledClass::$testMethod($value);
 		try {
-			if(array_key_exists($key, $this->vDescribe)) {
+			if(array_key_exists($key, $this->vDescribe) && $value) {
 				if(array_key_exists('size', $this->vDescribe[$key])) {
 					if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
-						throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ')');
+						throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ') : '.$value);
 					}
 				}
 				if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
 					if (!is_numeric($value)) {
-						throw new Exception('"' . $key . '" value should be numeric');
+						throw new Exception('"' . $key . '" value should be numeric : '.$value);
 					} 
 				}
 			}
