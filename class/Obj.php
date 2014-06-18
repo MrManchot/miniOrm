@@ -1,5 +1,7 @@
 <?php
 
+namespace miniOrm;
+
 class Obj {
 
 	public $id;
@@ -29,7 +31,7 @@ class Obj {
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;
 		} else {
-			$result_fields= Db::inst()->exec('DESCRIBE ' . $this->table);
+			$result_fields= Db::inst()->exec('DESCRIBE `' . $this->table . '`');
 
 			while ($row_field= $result_fields->fetch()) {
 				

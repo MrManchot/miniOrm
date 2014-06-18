@@ -20,22 +20,22 @@ Create, read, update and delete
 --------
 
 ```php
-$myCharacter = new Obj('character');
+$myCharacter = new miniOrm\Obj('character');
 $myCharacter->name = 'Conan';
 $myCharacter->damage = 10;
 // Or use hydrate() to set multiple fiels
 $myCharacter->hydrate(array('name' => 'Conan', 'damage' => 10));
 $myCharacter->insert();
 // Shortcut :
-$myCharacter = Obj::create('character', array('name' => 'Conan', 'damage' => 10));
+$myCharacter = miniOrm\Obj::create('character', array('name' => 'Conan', 'damage' => 10));
  
-$firstCharacter = Obj::load(1, 'character');
+$firstCharacter = miniOrm\Obj::load(1, 'character');
 $firstCharacter->damage = 12;
 $firstCharacter->update(); // Can use too save() : update() if already exist, else insert()
 $firstCharacter->delete();
 
 // Get an array of you object :
-foreach(Obj::find(array("damage > 2"), 'character') as $strongCharacter) {
+foreach(miniOrm\Obj::find(array("damage > 2"), 'character') as $strongCharacter) {
 	echo $strongCharacter->name.'<br/>';
 }
 ```
@@ -44,7 +44,7 @@ Extend your object
 --------
 
 ```php
-class Character extends Obj {
+class Character extends miniOrm\Obj {
 
 	// Define
 	protected static $tableStatic = 'character';
@@ -68,11 +68,11 @@ class Character extends Obj {
      
 }
 
-$testCharacter = new Charcacter();
+$testCharacter = new Character();
 $testCharacter->name = "Wesh";
 $testCharacter->save();
  
-$myCharacter = Charcacter::load(1);
+$myCharacter = Character::load(1);
 $myCharacter->id_race = 2;
 $myCharacter->refreshRelation(); // Now you have access to $myCharacter->race as an Obj
 $myCharacter->damage = 12; // Call before the setDamage function
@@ -83,22 +83,22 @@ MySQL Abstraction Layer
 --------
 
 ```php
-// Db::inst() return an access to your database connection
-$db = Db::inst();
-$db->insert('mo_character', array('name' => 'Conan', 'damage' => 12));
-$db->update('mo_character', array('damage' => 1), array('name="Conan"') );
+// miniOrm\Db::inst() return an access to your database connection
+$db = miniOrm\Db::inst();
+$db->insert('character', array('name' => 'Conan', 'damage' => 1));
+$db->update('character', array('damage' => 12), array('name="Conan"') );
 // 4 types of select shortcut :
-$db->getValue('damage', 'mo_character', array('name = "Conan"'));
+$db->getValue('damage', 'character', array('name = "Conan"'));
 // return : 12
-$db->getRow('*', 'mo_character', array('id_character = 1'));
+$db->getRow('*', 'character', array('id_character = 1'));
 // return : Array ( [id_character] => 1 [name] => MrManchot [damage] => 10 )
-$db->getArray('name, damage', 'mo_character', 'damage > 5', NULL, 'damage DESC', '0,2');
+$db->getArray('name, damage', 'character', 'damage > 5', NULL, 'damage DESC', '0,2');
 // return : Array ( [0] => Array ( [name] => Goldorak [damage] => 19 ) [1] => Array (...
-$db->getValueArray('id_character', 'mo_character', 'damage > 5');
+$db->getValueArray('id_character', 'character', 'damage > 5');
 // return : Array ( [0] => 1 [1] => 2 [2] => 4 )
  
-$db->delete('mo_character', array('name="Conan"') );
-$db->count('mo_character', array('damage > 10'));
+$db->delete('character', array('name="Conan"') );
+$db->count('character', array('damage > 10'));
 // Try a wrong query...
-$db->update('mo_character', array('damage' => 1), array('invalid_field="Toto"') );
+$db->update('character', array('damage' => 1), array('invalid_field="Toto"') );
 ```

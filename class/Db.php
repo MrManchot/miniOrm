@@ -1,5 +1,9 @@
 <?php
 
+namespace miniOrm;
+use PDO;
+use Exception;
+
 class Db {
 
 	private $link;
@@ -51,7 +55,7 @@ class Db {
 	}
 
 	private function getQuerySelect($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
-		$sql= 'SELECT ' . $select . ' FROM ' . $from;
+		$sql= 'SELECT ' . $select . ' FROM `' . $from.'`';
 		if ($where)
 			$sql.= self::getQueryWhere($where);
 		if ($groupby)
@@ -64,7 +68,7 @@ class Db {
 	}
 
 	private function getQueryDelete($table, $where= NULL) {
-		$sql= 'DELETE FROM ' . $table;
+		$sql= 'DELETE FROM `' . $table.'`';
 		if ($where)
 			$sql.= self::getQueryWhere($where);
 		return $sql;
@@ -77,7 +81,7 @@ class Db {
 				$array_value[]= $this->quote($value);
 			}
 		}
-		return 'INSERT INTO ' . $table . ' (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
+		return 'INSERT INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
 	}
 
 	private function getQueryUpdate($table, $values, $where) {
@@ -85,7 +89,7 @@ class Db {
 		foreach ((array)$values as $key => $value) {
 			$array_value[]= $key . '=' . $this->link->quote($value);
 		}
-		return 'UPDATE ' . $table . ' SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
+		return 'UPDATE `' . $table . '` SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
 	}
 
 
