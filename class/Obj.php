@@ -105,15 +105,15 @@ class Obj {
 		$obj->v= Db::inst()->getRow('*', $obj->table, $params);
 		if(empty($obj->v)) Db::displayError('Not found : '.$table.' : '.$findme);
 		$obj->id= $obj->v[$obj->key];
-		$obj->refreshRelation();
 		return $obj;
 	}
 
-	public function refreshRelation() {
+	public function getRelations() {
 		if (!empty($this->relations)) {
 			foreach ($this->relations as $relation) {
 				$alias = isset($relation['alias']) ? $relation['alias'] : $relation['field'];
-				$this->vmax[$alias]= $relation['obj']::load($this->__get($relation['field']));
+				if($id = $this->__get($relation['field']))
+					$this->vmax[$relation['obj']]= self::load($id, $relation['obj']);
 			}
 		}
 	}

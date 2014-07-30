@@ -56,13 +56,14 @@ class Character extends miniOrm\Obj {
  
     // Extends the set function
     // Call setDamage ( 'set' + 'damage' in camel case) before set in in the object
-    public function setDamage($damage) {
+    public function set_damage($damage) {
         $maxDamage = 0;
         switch ($this->race->name) {
             case 'Orc': $maxDamage = 10;
             case 'Human': $maxDamage = 8;
         }
-        if($damage > $maxDamage) $damage = $maxDamage;
+        if($damage > $maxDamage)
+        	$damage = $maxDamage;
         return $damage;
     }
      
@@ -74,7 +75,7 @@ $testCharacter->save();
  
 $myCharacter = Character::load(1);
 $myCharacter->id_race = 2;
-$myCharacter->refreshRelation(); // Now you have access to $myCharacter->race as an Obj
+$myCharacter->getRelations(); // Now you have access to $myCharacter->race as an Obj
 $myCharacter->damage = 12; // Call before the setDamage function
 echo $myCharacter->race->name.' => '.$myCharacter->damage; // Human => 8
 ```
