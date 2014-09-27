@@ -6,7 +6,7 @@ Simple, Light-weight & Extensible
 --------
 + 1 Table = 1 Object Model. Create, read, update and delete in your database without using any SQL queries. 
 + Only one file to include and you're ready. Don't need tables configuration, miniOrm automatically determine your database model. 
-+ Extend your object, create easily relation between it, overdie how to set values, automaticly validate fields & type and size and more... 
++ Extend your object, create easily relation between it, override how to set values, automaticly validate fields & type and size and more... 
 
 How to intall ?
 --------
