@@ -35,7 +35,7 @@ $conan = miniOrm\Obj::load(1, 'character');
 $conan->damage = 13;
 $conan->update(); // Can use too save() : update() if already exist, else insert()
 
-### Mulitple Load ###
+### Multiple Load ###
 foreach(miniOrm\Obj::find(array("damage > 1"), 'character') as $strongCharacter) {
 	echo $strongCharacter->name.' : '.$strongCharacter->damage.'<br/>';
 }
@@ -92,4 +92,4 @@ $db->count('character', array('damage > 10'));
 $damage = $db->getValue('damage', 'character', array('name = "Wolverine"')); # Return a field
 $character = $db->getRow('*', 'character', array('id_character = 1'));  # Return a row
 $characters = $db->getArray('name, damage', 'character', 'damage > 5', NULL, 'damage DESC', '0,2'); # Return an array
-$charactersIds = $db->getValueArray('id_character', 'character', 'damage > 5'); # Return an array of the value (in exemple : id_character)
+$charactersIds = $db->getValueArray('id_character', 'character', 'damage > 5'); # Return an array of the value (in example : id_character)

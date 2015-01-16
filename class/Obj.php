@@ -1,6 +1,7 @@
 <?php
 
 namespace miniOrm;
+use Exception;
 
 class Obj {
 
@@ -26,13 +27,12 @@ class Obj {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
 		}
-		if (_MO_FREEZE_) {
+		if (isset($cache) && _MO_FREEZE_) {
 			$this->v= $cache[$table]->v;
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;
 		} else {
 			$result_fields= Db::inst()->exec('DESCRIBE `' . $this->table . '`');
-
 			while ($row_field= $result_fields->fetch()) {
 				
 				$this->v[$row_field['Field']]= '';
@@ -111,7 +111,6 @@ class Obj {
 	public function getRelations() {
 		if (!empty($this->relations)) {
 			foreach ($this->relations as $relation) {
-				$alias = isset($relation['alias']) ? $relation['alias'] : $relation['field'];
 				if($id = $this->__get($relation['field']))
 					$this->vmax[$relation['obj']]= self::load($id, $relation['obj']);
 			}
@@ -126,7 +125,7 @@ class Obj {
 	}
 
 	public function update() {
-		Db::inst()->update($this->table, $this->v, $this->key . '=' . $this->id);
+		return Db::inst()->update($this->table, $this->v, $this->key . '=' . $this->id);
 	}
 
 	public function delete() {
@@ -139,8 +138,6 @@ class Obj {
 
 	public function __set($key, $value) {
 		$numericTypes= array('float', 'int', 'tinyint');
-		$intTypes= array('int', 'tinyint');
-		$dateTypes= array('date', 'datetime');
 		$testMethod= 'set_' . $key;
 		$calledClass= get_called_class();
 		if (method_exists($calledClass, $testMethod))
@@ -172,7 +169,7 @@ class Obj {
 		$testMethod= 'get_' . $key;
 		$calledClass= get_called_class();
 		if (method_exists($calledClass, $testMethod)) {
-			return $calledClass::$testMethod($value);
+			return $calledClass::$testMethod();
 		} elseif(isset($this->vmax) && array_key_exists($key, $this->vmax)) {
 			return $this->vmax[$key];
 		} elseif(isset($this->v) && array_key_exists($key, $this->v)) {
@@ -188,7 +185,8 @@ class Obj {
 
 	public function hydrate($values) {
 		foreach ($values as $key => $value) {
-			$this->__set($key, $value);
+			if(array_key_exists($key, $this->vDescribe))
+				$this->__set($key, $value);
 		}
 	}
 

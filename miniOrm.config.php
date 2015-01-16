@@ -15,6 +15,6 @@ define('_MO_CLASS_DIR_', '/class/');
 # Display MySQL error
 define('_MO_DEBUG_', true);
 
-# Freeze option permitt to add to cache your database configuration.
+# Freeze option permit to add to cache your database configuration.
 # Once activated, you can't access to new table dynamically : just active it in production.
 define('_MO_FREEZE_', false);

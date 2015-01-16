@@ -81,7 +81,10 @@ class Db {
 				$array_value[]= $this->quote($value);
 			}
 		}
-		return 'INSERT INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
+		if(!empty($array_value) && !empty($array_key))
+			return 'INSERT INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
+		else
+			return false;
 	}
 
 	private function getQueryUpdate($table, $values, $where) {
@@ -98,7 +101,6 @@ class Db {
 		$res= $this->link->query($q);
 		return $this->queryResult($res);
 	}
-	
 		
 	private function queryResult($res) {
 		try {
@@ -109,6 +111,7 @@ class Db {
 			return $res;
 		} catch(Exception $e) {
 			self::displayError($e->getMessage());
+			return false;
 		}
 	}
 
@@ -160,11 +163,11 @@ class Db {
 	}
 
 	public function delete($table, $where) {
-		self::exec(self::getQueryDelete($table, $where));
+		return self::exec(self::getQueryDelete($table, $where));
 	}
 
 	public function update($table, $values, $where) {
-		self::exec(self::getQueryUpdate($table, $values, $where));
+		return self::exec(self::getQueryUpdate($table, $values, $where));
 	}
 
 	public static function inst() {
