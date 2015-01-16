@@ -55,7 +55,7 @@ class Obj {
 				}
 
 				if($row_field['Extra']) $this->vDescribe[$row_field['Field']]['extra'] = $row_field['Extra'];
-				if($row_field['Default']) $this->vDescribe[$row_field['Field']]['default'] = $row_field['Default'];
+				if(!is_null($row_field['Default'])) $this->vDescribe[$row_field['Field']]['default'] = $row_field['Default'];
 
 				if ($row_field['Key'] == 'PRI') {
 					$this->key= $row_field['Field'];
@@ -187,6 +187,15 @@ class Obj {
 		foreach ($values as $key => $value) {
 			if(array_key_exists($key, $this->vDescribe))
 				$this->__set($key, $value);
+		}
+		foreach ($this->vDescribe as $fieldKey => $field) {
+			if(array_key_exists('default', $field) && !$this->__get($fieldKey)) {
+				if($field['default']=='CURRENT_TIMESTAMP') {
+					$this->__set($fieldKey, date('Y-m-d H:i:s'));
+				} else {
+					$this->__set($fieldKey, $field['default']);
+				}
+			}
 		}
 	}
 
