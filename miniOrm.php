@@ -2,13 +2,9 @@
 
 /*
  * miniOrm
- * Version: 2.0.0
+ * Version: 2.0.1
  * Copyright : Cédric Mouleyre / @MrManchot
  */
- 
-// namespace miniOrm;
-// use PDO;
-// use Exception;
 
 # Initialisation
 define('_MO_DIR_', __DIR__);
