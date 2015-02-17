@@ -1,6 +1,13 @@
 <?php
 
-require_once 'miniOrm.php';
+define('_MO_DB_NAME_', 'miniOrm');
+define('_MO_DB_LOGIN_', 'root');
+define('_MO_DB_PASSWORD_', 'emoxa');
+define('_MO_DB_SERVER_', 'localhost');
+
+# You should use instead the Composer Autoloading : https://getcomposer.org/doc/01-basic-usage.md#autoloading
+require_once __DIR__.'/../lib/miniOrm/Db.php';
+require_once __DIR__.'/../lib/miniOrm/Obj.php';
 
 # Get an access to your database connection
 $db = miniOrm\Db::inst();

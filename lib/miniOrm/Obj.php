@@ -7,6 +7,8 @@ class Obj {
 
 	public $id;
 	public $relations;
+	public $cache_dir;
+	public $freeze;
 	protected $v= array();
 	protected $vDescribe= array();
 	protected $vmax= array();
@@ -15,19 +17,25 @@ class Obj {
 	protected static $tableStatic = '';
 
 	public function __construct($table='', $values = array()) {
-		
+
+		# Freeze option permit to add to cache your database configuration.
+		# Once activated, you can't access to new table dynamically : just active it in production.
+		$this->freeze = (defined('_MO_FREEZE_')) ? _MO_FREEZE_ : false;
+
+		$this->cache_dir = (defined('_MO_CACHE_DIR_')) ? _MO_CACHE_DIR_ : __DIR__.'/../../cache/';
+
 		$this->table = $table ? $table : static::$tableStatic;
 		if(!$this->table) {
 			$this->table = false;
 			return false;
 		}
 		
-		$cacheFile= _MO_DIR_._MO_CACHE_DIR_ . 'miniOrm.tmp';
+		$cacheFile= $this->cache_dir . 'miniOrm.tmp';
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
 		}
-		if (isset($cache) && _MO_FREEZE_) {
+		if (isset($cache) && $this->freeze) {
 			$this->v= $cache[$table]->v;
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;

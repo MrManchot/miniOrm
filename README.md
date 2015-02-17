@@ -10,10 +10,14 @@ Simple, Light-weight & Extensible
 
 How to install ?
 --------
-Just define your database connection in miniOrm.config.php, include the miniOrm.php file on you're ready !
+Install with composer `composer require mrmanchot/miniorm`
+Then just define your database connection :
 
 ```php
-include('miniOrm.php');
+define('_MO_DB_NAME_', 'dbname');
+define('_MO_DB_LOGIN_', 'dblogin');
+define('_MO_DB_PASSWORD_', 'dbpassword');
+define('_MO_DB_SERVER_', 'localhost');
 ```
 
 Demo

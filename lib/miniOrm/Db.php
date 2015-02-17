@@ -10,11 +10,19 @@ class Db {
 	private static $mysql;
 	public $lastQuery;
 
-	private function __construct($name= _MO_DB_NAME_, $login= _MO_DB_LOGIN_, $mdp= _MO_DB_MDP_, $serveur= _MO_DB_SERVER_) {
-		if(!$name)
-			self::displayError('Please define your database name in miniOrm.config.php');
+	private function __construct() {
+
+		if(!defined('_MO_DB_NAME_'))
+			self::displayError('Please define your database name : _MO_DB_NAME_');
+		if(!defined('_MO_DB_LOGIN_'))
+			self::displayError('Please define your database login : _MO_DB_LOGIN_');
+		if(!defined('_MO_DB_PASSWORD_'))
+			self::displayError('Please define your database password : _MO_DB_PASSWORD_');
+		if(!defined('_MO_DB_SERVER_'))
+			self::displayError('Please define your database server : _MO_DB_SERVER_');
+
 		try {
-			$this->link = new PDO('mysql:host=' . $serveur . ';dbname=' . $name, $login, $mdp);
+			$this->link = new PDO('mysql:host=' . _MO_DB_SERVER_ . ';dbname=' . _MO_DB_NAME_, _MO_DB_LOGIN_, _MO_DB_PASSWORD_);
 		} catch(Exception $e) {
 			self::displayError($e->getMessage());
 		}
@@ -22,7 +30,8 @@ class Db {
 	
 	public static function displayError($error) {
 		$trace = debug_backtrace();
-		if(_MO_DEBUG_)
+		$debug = (defined('_MO_DEBUG_')) ? _MO_DEBUG_ : true;
+		if($debug)
 			die('<fieldset>
 				<legend>miniOrm Error</legend>'.
 				$error.'<br/><small>'.$trace[0]['file'].' ('.$trace[0]['line'].')</small>
