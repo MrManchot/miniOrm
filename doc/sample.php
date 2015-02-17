@@ -2,7 +2,7 @@
 
 define('_MO_DB_NAME_', 'miniOrm');
 define('_MO_DB_LOGIN_', 'root');
-define('_MO_DB_PASSWORD_', 'emoxa');
+define('_MO_DB_PASSWORD_', '');
 define('_MO_DB_SERVER_', 'localhost');
 
 # You should use instead the Composer Autoloading : https://getcomposer.org/doc/01-basic-usage.md#autoloading
