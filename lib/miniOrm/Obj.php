@@ -18,10 +18,7 @@ class Obj {
 
 	public function __construct($table='', $values = array()) {
 
-		# Freeze option permit to add to cache your database configuration.
-		# Once activated, you can't access to new table dynamically : just active it in production.
 		$this->freeze = (defined('_MO_FREEZE_')) ? _MO_FREEZE_ : false;
-
 		$this->cache_dir = (defined('_MO_CACHE_DIR_')) ? _MO_CACHE_DIR_ : __DIR__.'/../../cache/';
 
 		$this->table = $table ? $table : static::$tableStatic;

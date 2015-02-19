@@ -142,3 +142,17 @@ $charactersIds = $db->getValueArray(
 	'damage > 5'
 );
 ```
+
+Optional configuration
+--------
+```php
+# Freeze option permit to add to cache your database configuration.
+# Once activated, you can't access to new table dynamically : just active it in production.
+define('_MO_FREEZE_', true); // Default : false
+
+# Display MySQL errors
+define('_MO_DEBUG_', false); // Default : true
+
+# Define the cache dir
+define('_MO_CACHE_DIR_', '/var/www/mycachedir/'); // Default : miniOrm/cache
+```
