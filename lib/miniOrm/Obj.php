@@ -18,6 +18,7 @@ class Obj {
 
 	public function __construct($table='', $values = array()) {
 
+        $db = Db::inst();
 		$this->freeze = (defined('_MO_FREEZE_')) ? _MO_FREEZE_ : false;
 		$this->cache_dir = (defined('_MO_CACHE_DIR_')) ? _MO_CACHE_DIR_ : __DIR__.'/../../cache/';
 
@@ -26,8 +27,8 @@ class Obj {
 			$this->table = false;
 			return false;
 		}
-		
-		$cacheFile= $this->cache_dir . 'miniOrm.tmp';
+
+		$cacheFile= $this->cache_dir . 'miniOrm_'._MO_DB_SERVER_.'_'._MO_DB_NAME_.'.tmp';
 		if (file_exists($cacheFile)) {
 			$cacheContent= file_get_contents($cacheFile);
 			$cache= unserialize($cacheContent);
@@ -37,7 +38,7 @@ class Obj {
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;
 		} else {
-			$result_fields= Db::inst()->exec('DESCRIBE `' . $this->table . '`');
+			$result_fields= $db->exec('DESCRIBE `' . $this->table . '`');
 			while ($row_field= $result_fields->fetch()) {
 				
 				$this->v[$row_field['Field']]= '';
