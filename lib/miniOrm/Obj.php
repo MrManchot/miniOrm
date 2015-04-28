@@ -165,6 +165,8 @@ class Obj {
 			Db::displayError($e->getMessage());
 		}
 		if(is_array($this->v) && array_key_exists($key, $this->v)) {
+			if(is_array($value))
+				$value = serialize($value);
 			$this->v[$key]= $value;
 		} else {
 			$this->vmax[$key]= $value;
