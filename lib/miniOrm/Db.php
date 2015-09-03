@@ -10,19 +10,23 @@ class Db {
 	private static $mysql;
 	public $lastQuery;
 
-	private function __construct() {
+	private function __construct($inst) {
 
-		if(!defined('_MO_DB_NAME_'))
-			self::displayError('Please define your database name : _MO_DB_NAME_');
-		if(!defined('_MO_DB_LOGIN_'))
-			self::displayError('Please define your database login : _MO_DB_LOGIN_');
-		if(!defined('_MO_DB_PASSWORD_'))
-			self::displayError('Please define your database password : _MO_DB_PASSWORD_');
-		if(!defined('_MO_DB_SERVER_'))
-			self::displayError('Please define your database server : _MO_DB_SERVER_');
+		if(!defined('_MO_DB_NAME_'.$inst))
+			self::displayError('Please define your database name : _MO_DB_NAME_'.$inst);
+		if(!defined('_MO_DB_LOGIN_'.$inst))
+			self::displayError('Please define your database login : _MO_DB_LOGIN_'.$inst);
+		if(!defined('_MO_DB_PASSWORD_'.$inst))
+			self::displayError('Please define your database password : _MO_DB_PASSWORD_'.$inst);
+		if(!defined('_MO_DB_SERVER_'.$inst))
+			self::displayError('Please define your database server : _MO_DB_SERVER_'.$inst);
 
 		try {
-			$this->link = new PDO('mysql:host=' . _MO_DB_SERVER_ . ';dbname=' . _MO_DB_NAME_, _MO_DB_LOGIN_, _MO_DB_PASSWORD_);
+			$this->link = new PDO(
+				'mysql:host=' . constant('_MO_DB_SERVER_'.$inst) . ';dbname=' . constant('_MO_DB_NAME_'.$inst),
+				constant('_MO_DB_LOGIN_'.$inst),
+				constant('_MO_DB_PASSWORD_'.$inst)
+			);
 		} catch(Exception $e) {
 			self::displayError($e->getMessage());
 		}
@@ -179,10 +183,10 @@ class Db {
 		return self::exec(self::getQueryUpdate($table, $values, $where));
 	}
 
-	public static function inst() {
-		if (is_null(self::$mysql))
-			self::$mysql= new Db();
-		return self::$mysql;
+	public static function inst($inst = '') {
+		if (is_null(self::$mysql[$inst]))
+			self::$mysql[$inst]= new Db($inst);
+		return self::$mysql[$inst];
 	}
 
 }
