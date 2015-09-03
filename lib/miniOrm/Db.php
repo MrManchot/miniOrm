@@ -68,7 +68,7 @@ class Db {
 	}
 
 	private function getQuerySelect($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
-		$sql= 'SELECT ' . $select . ' FROM `' . $from.'`';
+		$sql= 'SELECT ' . $select . ' FROM ' . $from;
 		if ($where)
 			$sql.= self::getQueryWhere($where);
 		if ($groupby)
@@ -159,9 +159,9 @@ class Db {
 	public function getValueArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
 		$valueArray= array();
 		$r= self::getArray($select, $from, $where, $groupby, $orderby, $limit);
-		foreach ($r as $v) {
-			$valueArray[]= $v[$select];
-		}
+		$key = key($r[0]);
+		foreach ($r as $v) 
+			$valueArray[]= $v[$key];
 		return $valueArray;
 	}
 
