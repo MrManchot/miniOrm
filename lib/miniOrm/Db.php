@@ -152,8 +152,11 @@ class Db {
 	}
 
 	public function getValue($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL) {
-		$r= self::getArray($select, $from, $where, $groupby, $orderby, '0,1');
-		return $r[0][$select];
+		$r = self::getArray($select, $from, $where, $groupby, $orderby, '0,1');
+		if(!$r || !is_array($r[0]))
+			return false;
+		$key = key($r[0]);
+		return $r[0][$key];
 	}
 
 	public function getValueArray($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
