@@ -25,7 +25,8 @@ class Db {
 			$this->link = new PDO(
 				'mysql:host=' . constant('_MO_DB_SERVER_'.$inst) . ';dbname=' . constant('_MO_DB_NAME_'.$inst),
 				constant('_MO_DB_LOGIN_'.$inst),
-				constant('_MO_DB_PASSWORD_'.$inst)
+				constant('_MO_DB_PASSWORD_'.$inst),
+				array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8")
 			);
 		} catch(Exception $e) {
 			self::displayError($e->getMessage());
