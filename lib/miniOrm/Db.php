@@ -7,7 +7,7 @@ use Exception;
 class Db {
 
 	private $link;
-	private static $mysql;
+	private static $mysql = array();
 	public $lastQuery;
 
 	private function __construct($inst) {
@@ -188,7 +188,7 @@ class Db {
 	}
 
 	public static function inst($inst = '') {
-		if (is_null(self::$mysql[$inst]))
+		if (!array_key_exists($inst, self::$mysql))
 			self::$mysql[$inst]= new Db($inst);
 		return self::$mysql[$inst];
 	}
