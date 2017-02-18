@@ -2,6 +2,7 @@
   "name": "mrmanchot/miniorm",
   "description": "Just a mini ORM, for using Object Model and MySQL Abstraction Layer as simply as possible",
   "keywords": ["php", "orm"],
+  "license": "MIT",
   "authors": [
     {
       "name": "Cédric Mouleyre",
