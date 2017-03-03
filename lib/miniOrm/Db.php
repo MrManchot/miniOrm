@@ -43,7 +43,7 @@ class Db {
 			</fieldset>');
 	}
 
-	private function quote($value) {
+	public function quote($value) {
 		$isNotString= array('NOW()');
 		if (in_array($value, $isNotString)) {
 			return $value;
