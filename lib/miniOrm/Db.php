@@ -34,13 +34,15 @@ class Db {
 	}
 	
 	public static function displayError($error) {
-		$trace = debug_backtrace();
-		$debug = (defined('_MO_DEBUG_')) ? _MO_DEBUG_ : true;
-		if($debug)
-			die('<fieldset>
-				<legend>miniOrm Error</legend>'.
-				$error.'<br/><small>'.$trace[0]['file'].' ('.$trace[0]['line'].')</small>
-			</fieldset>');
+        	$traces = debug_backtrace();
+        	$debug  = (defined('_MO_DEBUG_')) ? _MO_DEBUG_ : true;
+        	if ($debug) {
+            		$trace = '';
+            		foreach ($traces as $trace_line) {
+                		$trace .= '<small>' . $trace_line['file'] . ' (' . $trace_line['function'].' => '.$trace_line['line'] . ')</small><br/>';
+            		}
+            		die('<fieldset><legend>miniOrm Error</legend>' . $error . '<br/>' . $trace . '</fieldset>');
+		}
 	}
 
 	public function quote($value) {
