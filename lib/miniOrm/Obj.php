@@ -15,10 +15,10 @@ class Obj {
 	protected $table;
 	protected $key;
 	protected static $tableStatic = '';
+	protected static $dbStatic = '';
 
 	public function __construct($table='', $values = array()) {
 
-        $db = Db::inst();
 		$this->freeze = (defined('_MO_FREEZE_')) ? _MO_FREEZE_ : false;
 		$this->cache_dir = (defined('_MO_CACHE_DIR_')) ? _MO_CACHE_DIR_ : __DIR__.'/../../cache/';
 
@@ -38,7 +38,7 @@ class Obj {
 			$this->vDescribe= $cache[$table]->vDescribe;
 			$this->key= $cache[$table]->key;
 		} else {
-			$result_fields= $db->exec('DESCRIBE `' . $this->table . '`');
+			$result_fields= Db::inst(static::$dbStatic)->exec('DESCRIBE `' . $this->table . '`');
 			while ($row_field= $result_fields->fetch()) {
 				
 				$this->v[$row_field['Field']]= '';
@@ -96,7 +96,7 @@ class Obj {
 		if(!$table) $table = static::$tableStatic;
 		$objects = array();
 		$obj = new self($table);
-		$objectsArray = Db::inst()->getArray('*', $obj->table, $findme);
+		$objectsArray = Db::inst(static::$dbStatic)->getArray('*', $obj->table, $findme);
 		foreach($objectsArray as $objectArray) {
 			$objects[] = self::load($objectArray[$obj->key], $table);
 		}
@@ -108,7 +108,7 @@ class Obj {
 		$calledClass= get_called_class();
 		$obj= new $calledClass($table);
 		$params= is_numeric($findme) ? $obj->key . '=' . $findme : $findme;
-		$obj->v= Db::inst()->getRow('*', $obj->table, $params);
+		$obj->v= Db::inst(static::$dbStatic)->getRow('*', $obj->table, $params);
 		if(empty($obj->v)) Db::displayError('Not found : '.$table.' : '.$findme);
 		$obj->id= $obj->v[$obj->key];
 		return $obj;
@@ -124,18 +124,18 @@ class Obj {
 	}
 
 	public function insert() {
-		$this->id= Db::inst()->insert($this->table, $this->v);
+		$this->id= Db::inst(static::$dbStatic)->insert($this->table, $this->v);
 		$identifier = $this->key;
 		$this->$identifier = $this->id;
 		return $this->id;
 	}
 
 	public function update() {
-		return Db::inst()->update($this->table, $this->v, $this->key . '=' . $this->id);
+		return Db::inst(static::$dbStatic)->update($this->table, $this->v, $this->key . '=' . $this->id);
 	}
 
 	public function delete() {
-		Db::inst()->delete($this->table, $this->key . '=' . $this->id);
+		Db::inst(static::$dbStatic)->delete($this->table, $this->key . '=' . $this->id);
 	}
 
 	public function save() {
