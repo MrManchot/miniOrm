@@ -23,7 +23,7 @@ define('_MO_DB_SERVER_', 'localhost');
 How it works ?
 --------
 
-###Create, read, update and delete
+### Create, read, update and delete
 ```php
 ### Create
 $firstCharacter = new miniOrm\Obj('character');
@@ -51,7 +51,7 @@ $firstCharacter->delete();
 
 ```
 
-###Load Object
+### Load Object
 ```php
 ### Load
 $conan = miniOrm\Obj::load(1, 'character');
