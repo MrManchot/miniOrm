@@ -28,15 +28,21 @@ class Obj {
 			return false;
 		}
 
-		$cacheFile= $this->cache_dir . 'miniOrm_'._MO_DB_SERVER_.'_'._MO_DB_NAME_.'.tmp';
+        $cache_key = array(
+            constant('_MO_DB_SERVER_'.static::$dbStatic),
+            constant('_MO_DB_NAME_'.static::$dbStatic),
+            $this->table
+        );
+		$cacheFile = $this->cache_dir . str_replace('.', '_', implode('_', $cache_key)).'.tmp';
 		if (file_exists($cacheFile)) {
-			$cacheContent= file_get_contents($cacheFile);
-			$cache= unserialize($cacheContent);
+			$cacheContent = file_get_contents($cacheFile);
+			$cache = unserialize($cacheContent);
 		}
+
 		if (isset($cache) && $this->freeze) {
-			$this->v= $cache[$table]->v;
-			$this->vDescribe= $cache[$table]->vDescribe;
-			$this->key= $cache[$table]->key;
+			$this->v= $cache->v;
+			$this->vDescribe= $cache->vDescribe;
+			$this->key= $cache->key;
 		} else {
 			$result_fields= Db::inst(static::$dbStatic)->exec('DESCRIBE `' . $this->table . '`');
 			while ($row_field= $result_fields->fetch()) {
@@ -68,9 +74,8 @@ class Obj {
 					$this->vDescribe[$row_field['Field']]['primary'] = true;
 				}
 			}
-			$cache[$table]= $this;
 			if(is_writable(dirname($cacheFile))) {
-				file_put_contents($cacheFile, serialize($cache));
+				file_put_contents($cacheFile, serialize($this));
 				@chmod($cacheFile, 0777);
 			} else {
 				Db::displayError('Can\'t write : '.$cacheFile);
