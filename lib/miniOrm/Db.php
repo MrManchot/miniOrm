@@ -90,7 +90,7 @@ class Db {
 		return $sql;
 	}
 
-	private function getQueryInsert($table, $values) {
+	private function getQueryInsert($table, $values, $type = 'INSERT') {
 		foreach ($values as $key => $value) {
 			if($value) {
 				$array_key[]= '`' . $key . '`';
@@ -98,7 +98,7 @@ class Db {
 			}
 		}
 		if(!empty($array_value) && !empty($array_key))
-			return 'INSERT INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
+			return $type . ' INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
 		else
 			return false;
 	}
@@ -176,8 +176,8 @@ class Db {
 		return $r[0]['count'];
 	}
 
-	public function insert($table, $values) {
-		self::exec(self::getQueryInsert($table, $values));
+	public function insert($table, $values, $type = 'INSERT') {
+		self::exec(self::getQueryInsert($table, $values, $type));
 		return $this->link->lastInsertId();
 	}
 
