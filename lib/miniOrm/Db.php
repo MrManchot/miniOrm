@@ -71,15 +71,23 @@ class Db {
 	}
 
 	private function getQuerySelect($select, $from, $where= NULL, $groupby= NULL, $orderby= NULL, $limit= NULL) {
-		$sql= 'SELECT ' . $select . ' FROM ' . $from;
-		if ($where)
-			$sql.= self::getQueryWhere($where);
-		if ($groupby)
-			$sql.= ' GROUP BY ' . $groupby;
-		if ($orderby)
-			$sql.= ' ORDER BY ' . $orderby;
-		if ($limit)
-			$sql.= ' LIMIT ' . $limit;
+		if (is_array($select)) {
+		    $select = implode(', ', $select);
+		}
+		$sql = 'SELECT ' . $select . ' FROM ' . $from;
+		if ($where) {
+		    $sql .= self::getQueryWhere($where);
+		}
+		if ($groupby) {
+		    $sql .= ' GROUP BY ' . $groupby;
+		}
+		if ($orderby) {
+		    $sql .= ' ORDER BY ' . $orderby;
+		}
+		if ($limit) {
+		    $sql .= ' LIMIT ' . $limit;
+		}
+
 		return $sql;
 	}
 
