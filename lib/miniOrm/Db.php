@@ -100,7 +100,7 @@ class Db {
 
 	private function getQueryInsert($table, $values, $type = 'INSERT') {
 		foreach ($values as $key => $value) {
-			if($value) {
+			if($value != '') {
 				$array_key[]= '`' . $key . '`';
 				$array_value[]= $this->quote($value);
 			}
