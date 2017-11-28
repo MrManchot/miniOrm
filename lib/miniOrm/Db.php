@@ -120,7 +120,8 @@ class Db
             }
         }
         if (!empty($array_value) && !empty($array_key)) {
-            return $type . ' INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',', $array_value) . ')';
+            return $type . ' INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',',
+                    $array_value) . ')';
         } else {
             return false;
         }
@@ -180,13 +181,13 @@ class Db
     public function getRow($select, $from, $where = null, $groupby = null, $orderby = null)
     {
         $r = self::getArray($select, $from, $where, $groupby, $orderby, '0,1');
-        return $r ? $r[0] : false;
+        return is_array($r) && array_key_exists(0, $r) ? $r[0] : false;
     }
 
     public function getValue($select, $from, $where = null, $groupby = null, $orderby = null)
     {
         $r = self::getArray($select, $from, $where, $groupby, $orderby, '0,1');
-        if (!$r || !is_array($r[0])) {
+        if (!is_array($r) || !array_key_exists(0, $r)) {
             return false;
         }
         $key = key($r[0]);
@@ -197,6 +198,9 @@ class Db
     {
         $valueArray = array();
         $r = self::getArray($select, $from, $where, $groupby, $orderby, $limit);
+        if (!is_array($r) || !array_key_exists(0, $r)) {
+            return false;
+        }
         $key = key($r[0]);
         foreach ($r as $v) {
             $valueArray[] = $v[$key];
@@ -207,7 +211,7 @@ class Db
     public function count($from, $where = null, $groupby = null)
     {
         $r = self::getArray('COUNT(*) as count', $from, $where, $groupby);
-        return $r[0]['count'];
+        return is_array($r) && array_key_exists(0, $r) ? $r[0]['count'] : 0;
     }
 
     public function insert($table, $values, $type = 'INSERT')
