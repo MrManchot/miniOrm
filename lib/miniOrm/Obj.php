@@ -214,6 +214,8 @@ class Obj
             return $this->vmax[$key];
         } elseif (isset($this->v) && array_key_exists($key, $this->v)) {
             return $this->v[$key];
+        } elseif ($key == 'all') {
+            return array_merge($this->v, $this->vmax);
         } else {
             return "";
         }
