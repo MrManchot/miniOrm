@@ -120,8 +120,10 @@ class Db
             }
         }
         if (!empty($array_value) && !empty($array_key)) {
-            return $type . ' INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(',',
-                    $array_value) . ')';
+            return $type . ' INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(
+                ',',
+                $array_value
+            ) . ')';
         } else {
             return false;
         }
@@ -130,8 +132,8 @@ class Db
     private function getQueryUpdate($table, $values, $where)
     {
         $array_value = array();
-        foreach ((array)$values as $key => $value) {
-            $array_value[] = $key . '=' . $this->link->quote($value);
+        foreach ((array) $values as $key => $value) {
+            $array_value[] = '`' . $key . '`=' . $this->link->quote($value);
         }
         return 'UPDATE `' . $table . '` SET ' . implode(', ', $array_value) . ' ' . self::getQueryWhere($where);
     }
@@ -237,5 +239,4 @@ class Db
         }
         return self::$mysql[$inst];
     }
-
 }
