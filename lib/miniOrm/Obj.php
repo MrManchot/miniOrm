@@ -198,6 +198,9 @@ class Obj
             if (is_array($value)) {
                 $value = serialize($value);
             }
+            else if ($this->vDescribe[$key]['type'] == 'datetime' && $value instanceof \DateTime) {
+                $value = $value->format('Y-m-d H:i:s.u');
+            }
             $this->v[$key] = $value;
         } else {
             $this->vmax[$key] = $value;
