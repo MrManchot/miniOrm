@@ -172,7 +172,7 @@ class Obj
 
     public function __set($key, $value)
     {
-        $numericTypes = array('float', 'int', 'tinyint');
+        $numericTypes = array('float', 'int', 'tinyint', 'decimal');
         $testMethod = 'set_' . $key;
         $calledClass = get_called_class();
         if (method_exists($calledClass, $testMethod)) {
@@ -180,14 +180,14 @@ class Obj
         }
         try {
             if (array_key_exists($key, $this->vDescribe) && $value) {
-                if (array_key_exists('size', $this->vDescribe[$key])) {
-                    if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
-                        throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ') : ' . $value);
-                    }
-                }
                 if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
                     if (!is_numeric($value)) {
                         throw new Exception('"' . $key . '" value should be numeric : ' . $value);
+                    }
+                }
+                else if (array_key_exists('size', $this->vDescribe[$key])) {
+                    if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
+                        throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ') : ' . $value);
                     }
                 }
             }
@@ -197,6 +197,9 @@ class Obj
         if (is_array($this->v) && array_key_exists($key, $this->v)) {
             if (is_array($value)) {
                 $value = serialize($value);
+            }
+            else if ($this->vDescribe[$key]['type'] == 'datetime' && $value instanceof \DateTime) {
+                $value = $value->format('Y-m-d H:i:s.u');
             }
             $this->v[$key] = $value;
         } else {
