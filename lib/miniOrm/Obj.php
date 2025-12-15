@@ -23,7 +23,7 @@ class Obj
     {
 
         $this->freeze = (defined('_MO_FREEZE_')) ? _MO_FREEZE_ : false;
-        $this->cache_dir = (defined('_MO_CACHE_DIR_')) ? _MO_CACHE_DIR_ : __DIR__ . '/../../cache/';
+        $this->cache_dir = (defined('_MO_CACHE_DIR_')) ? rtrim(_MO_CACHE_DIR_, '/\\') . '/' : __DIR__ . '/../../cache/';
 
         $this->table = $table ? $table : static::$tableStatic;
         if (!$this->table) {
@@ -31,21 +31,13 @@ class Obj
             return false;
         }
 
-        $cache_key = array(
-            constant('_MO_DB_SERVER_' . static::$dbStatic),
-            constant('_MO_DB_NAME_' . static::$dbStatic),
-            $this->table
-        );
-        $cacheFile = $this->cache_dir . str_replace('.', '_', implode('_', $cache_key)) . '.tmp';
-        if (file_exists($cacheFile)) {
-            $cacheContent = file_get_contents($cacheFile);
-            $cache = unserialize($cacheContent);
-        }
+        $cacheFile = $this->getCacheFilePath();
+        $cache = $this->readCache($cacheFile);
 
-        if (isset($cache) && $this->freeze) {
-            $this->v = $cache->v;
-            $this->vDescribe = $cache->vDescribe;
-            $this->key = $cache->key;
+        if (is_array($cache) && $this->freeze) {
+            $this->v = $cache['v'];
+            $this->vDescribe = $cache['vDescribe'];
+            $this->key = $cache['key'];
         } else {
             $result_fields = Db::inst(static::$dbStatic)->exec('DESCRIBE `' . $this->table . '`');
             while ($row_field = $result_fields->fetch()) {
@@ -81,12 +73,7 @@ class Obj
                     $this->vDescribe[$row_field['Field']]['primary'] = true;
                 }
             }
-            if (is_writable(dirname($cacheFile))) {
-                file_put_contents($cacheFile, serialize($this));
-                @chmod($cacheFile, 0777);
-            } else {
-                Db::displayError('Can\'t write : ' . $cacheFile);
-            }
+            $this->writeCache($cacheFile);
 
         }
         $this->hydrate($values);
@@ -112,10 +99,11 @@ class Obj
             $table = static::$tableStatic;
         }
         $objects = array();
-        $obj = new self($table);
+        $calledClass = get_called_class();
+        $obj = new $calledClass($table);
         $objectsArray = Db::inst(static::$dbStatic)->getArray('*', $obj->table, $findme);
         foreach ($objectsArray as $objectArray) {
-            $objects[] = self::load($objectArray[$obj->key], $table);
+            $objects[] = static::load($objectArray[$obj->key], $table);
         }
         return $objects;
     }
@@ -127,7 +115,7 @@ class Obj
         }
         $calledClass = get_called_class();
         $obj = new $calledClass($table);
-        $params = is_numeric($findme) ? $obj->key . '=' . $findme : $findme;
+        $params = is_numeric($findme) ? array($obj->key => $findme) : $findme;
         $obj->v = Db::inst(static::$dbStatic)->getRow('*', $obj->table, $params);
         if (empty($obj->v)) {
             Db::displayError('Not found : ' . $table . ' : ' . $findme);
@@ -140,8 +128,9 @@ class Obj
     {
         if (!empty($this->relations)) {
             foreach ($this->relations as $relation) {
-                if ($id = $this->__get($relation['field'])) {
-                    $this->vmax[$relation['obj']] = self::load($id, $relation['obj']);
+                $id = $this->__get($relation['field']);
+                if ($id !== '' && $id !== null) {
+                    $this->vmax[$relation['obj']] = static::load($id, $relation['obj']);
                 }
             }
         }
@@ -157,12 +146,12 @@ class Obj
 
     public function update()
     {
-        return Db::inst(static::$dbStatic)->update($this->table, $this->v, $this->key . '=' . $this->id);
+        return Db::inst(static::$dbStatic)->update($this->table, $this->v, array($this->key => $this->id));
     }
 
     public function delete()
     {
-        Db::inst(static::$dbStatic)->delete($this->table, $this->key . '=' . $this->id);
+        Db::inst(static::$dbStatic)->delete($this->table, array($this->key => $this->id));
     }
 
     public function save()
@@ -174,18 +163,16 @@ class Obj
     {
         $numericTypes = array('float', 'int', 'tinyint', 'decimal');
         $testMethod = 'set_' . $key;
-        $calledClass = get_called_class();
-        if (method_exists($calledClass, $testMethod)) {
-            $value = $calledClass::$testMethod($value);
+        if (method_exists($this, $testMethod)) {
+            $value = $this->$testMethod($value);
         }
         try {
-            if (array_key_exists($key, $this->vDescribe) && $value) {
+            if (array_key_exists($key, $this->vDescribe) && $value !== null && $value !== '') {
                 if (in_array($this->vDescribe[$key]['type'], $numericTypes)) {
                     if (!is_numeric($value)) {
                         throw new Exception('"' . $key . '" value should be numeric : ' . $value);
                     }
-                }
-                else if (array_key_exists('size', $this->vDescribe[$key])) {
+                } elseif (array_key_exists('size', $this->vDescribe[$key])) {
                     if (strlen($value) > $this->vDescribe[$key]['size'] && $this->vDescribe[$key]['size']) {
                         throw new Exception('"' . $key . '" value is too long (' . $this->vDescribe[$key]['size'] . ') : ' . $value);
                     }
@@ -199,7 +186,8 @@ class Obj
                 $value = serialize($value);
             }
             else if ($value instanceof \DateTime && ($this->vDescribe[$key]['type'] == 'datetime' || $this->vDescribe[$key]['type'] == 'date')) {
-                $value = $value->format('Y-m-d H:i:s.u');
+                $format = ($this->vDescribe[$key]['type'] == 'date') ? 'Y-m-d' : 'Y-m-d H:i:s';
+                $value = $value->format($format);
             }
             $this->v[$key] = $value;
         } else {
@@ -210,9 +198,8 @@ class Obj
     public function __get($key)
     {
         $testMethod = 'get_' . $key;
-        $calledClass = get_called_class();
-        if (method_exists($calledClass, $testMethod)) {
-            return $calledClass::$testMethod();
+        if (method_exists($this, $testMethod)) {
+            return $this->$testMethod();
         } elseif (isset($this->vmax) && array_key_exists($key, $this->vmax)) {
             return $this->vmax[$key];
         } elseif (isset($this->v) && array_key_exists($key, $this->v)) {
@@ -237,7 +224,7 @@ class Obj
             }
         }
         foreach ($this->vDescribe as $fieldKey => $field) {
-            if (array_key_exists('default', $field) && !$this->__get($fieldKey)) {
+            if (array_key_exists('default', $field) && $this->__get($fieldKey) === '') {
                 if ($field['default'] == 'CURRENT_TIMESTAMP') {
                     $this->__set($fieldKey, date('Y-m-d H:i:s'));
                 } else {
@@ -245,6 +232,61 @@ class Obj
                 }
             }
         }
+    }
+
+    private function getCacheFilePath()
+    {
+        $cache_key = array(
+            $this->getDbConfigValue('SERVER'),
+            $this->getDbConfigValue('NAME'),
+            $this->table
+        );
+        return $this->cache_dir . str_replace('.', '_', implode('_', $cache_key)) . '.json';
+    }
+
+    private function getDbConfigValue($key)
+    {
+        $const = '_MO_DB_' . $key . '_' . static::$dbStatic;
+        if (!defined($const)) {
+            Db::displayError('Please define your database ' . strtolower($key) . ' : ' . $const);
+        }
+        return constant($const);
+    }
+
+    private function ensureCacheDir()
+    {
+        if (!is_dir($this->cache_dir)) {
+            if (!@mkdir($this->cache_dir, 0777, true) && !is_dir($this->cache_dir)) {
+                Db::displayError('Can\'t create cache dir : ' . $this->cache_dir);
+            }
+        }
+        if (!is_writable($this->cache_dir)) {
+            Db::displayError('Can\'t write : ' . $this->cache_dir);
+        }
+    }
+
+    private function readCache($cacheFile)
+    {
+        if (!file_exists($cacheFile)) {
+            return null;
+        }
+        $cacheContent = file_get_contents($cacheFile);
+        $cache = json_decode($cacheContent, true);
+        return is_array($cache) ? $cache : null;
+    }
+
+    private function writeCache($cacheFile)
+    {
+        $this->ensureCacheDir();
+        $cache = array(
+            'v' => $this->v,
+            'vDescribe' => $this->vDescribe,
+            'key' => $this->key
+        );
+        if (file_put_contents($cacheFile, json_encode($cache)) === false) {
+            Db::displayError('Can\'t write : ' . $cacheFile);
+        }
+        @chmod($cacheFile, 0666);
     }
 
 }
