@@ -28,12 +28,13 @@ class Db
                 self::displayError('Please define your database server : _MO_DB_SERVER_' . $inst);
             }
 
+            $charset = $this->resolveCharset($inst);
             $this->link = new PDO(
-                'mysql:host=' . constant('_MO_DB_SERVER_' . $inst) . ';dbname=' . constant('_MO_DB_NAME_' . $inst) . ';charset=utf8',
+                'mysql:host=' . constant('_MO_DB_SERVER_' . $inst) . ';dbname=' . constant('_MO_DB_NAME_' . $inst) . ';charset=' . $charset,
                 constant('_MO_DB_LOGIN_' . $inst),
                 constant('_MO_DB_PASSWORD_' . $inst),
                 array(
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . $charset,
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false
@@ -41,6 +42,38 @@ class Db
             );
         } catch (Exception $e) {
             self::displayError($e->getMessage());
+        }
+    }
+
+    private function resolveCharset($inst)
+    {
+        $charsetConst = '_MO_DB_CHARSET_' . $inst;
+        if (defined($charsetConst)) {
+            $charset = constant($charsetConst);
+        } elseif (defined('_MO_DB_CHARSET_')) {
+            $charset = _MO_DB_CHARSET_;
+        } else {
+            $charset = 'utf8mb4';
+        }
+        $charset = preg_replace('/[^A-Za-z0-9_]/', '', (string) $charset);
+        return $charset ? $charset : 'utf8mb4';
+    }
+
+    private static function quoteIdentifier($identifier)
+    {
+        $parts = explode('.', $identifier);
+        foreach ($parts as $part) {
+            if ($part === '' || preg_match('/[^A-Za-z0-9_]/', $part)) {
+                self::displayError('Invalid identifier : ' . $identifier);
+            }
+        }
+        return '`' . implode('`.`', $parts) . '`';
+    }
+
+    private function ensureWhereNotEmpty($where, $operation)
+    {
+        if ($where === null || $where === '' || (is_array($where) && count($where) === 0)) {
+            self::displayError($operation . ' must have a WHERE clause');
         }
     }
 
@@ -68,6 +101,12 @@ class Db
     public function quote($value)
     {
         $isNotString = array('NOW()');
+        if ($value === null) {
+            return 'NULL';
+        }
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
         if (in_array($value, $isNotString)) {
             return $value;
         } else {
@@ -107,9 +146,7 @@ class Db
         if (is_array($where) && self::isAssocArray($where)) {
             $conditions = array();
             foreach ($where as $key => $value) {
-                $cleanKey = preg_replace('/[^A-Za-z0-9_\.]/', '', $key);
-                $cleanKey = str_replace('.', '`.`', $cleanKey);
-                $conditions[] = '`' . $cleanKey . '` = ?';
+                $conditions[] = self::quoteIdentifier($key) . ' = ?';
                 $params[] = $value;
             }
             return $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
@@ -122,9 +159,9 @@ class Db
     private function getQuerySelect($select, $from, $where = null, $groupby = null, $orderby = null, $limit = null)
     {
         if (is_array($select)) {
-            $select = implode(', ', $select);
+            $select = implode(', ', array_map(array(__CLASS__, 'quoteIdentifier'), $select));
         }
-        $sql = 'SELECT ' . $select . ' FROM ' . $from;
+        $sql = 'SELECT ' . $select . ' FROM ' . self::quoteIdentifier($from);
         if ($where) {
             $trimmedWhere = ltrim($where);
             if (stripos($trimmedWhere, 'where ') === 0) {
@@ -148,7 +185,7 @@ class Db
 
     private function getQueryDelete($table, $where = null)
     {
-        $sql = 'DELETE FROM `' . $table . '`';
+        $sql = 'DELETE FROM ' . self::quoteIdentifier($table);
         return $sql;
     }
 
@@ -158,16 +195,13 @@ class Db
         $array_value = array();
         $array_placeholder = array();
         foreach ($values as $key => $value) {
-            if ($value === '') {
-                continue;
-            }
-            $array_key[] = '`' . $key . '`';
+            $array_key[] = self::quoteIdentifier($key);
             $array_value[] = $value;
             $array_placeholder[] = '?';
         }
         if (!empty($array_value) && !empty($array_key)) {
             return array(
-                $type . ' INTO `' . $table . '` (' . implode(',', $array_key) . ') VALUES (' . implode(
+                $type . ' INTO ' . self::quoteIdentifier($table) . ' (' . implode(',', $array_key) . ') VALUES (' . implode(
                     ',',
                     $array_placeholder
                 ) . ')',
@@ -183,10 +217,10 @@ class Db
         $array_value = array();
         $array_placeholder_values = array();
         foreach ((array) $values as $key => $value) {
-            $array_value[] = '`' . $key . '` = ?';
+            $array_value[] = self::quoteIdentifier($key) . ' = ?';
             $array_placeholder_values[] = $value;
         }
-        return array('UPDATE `' . $table . '` SET ' . implode(', ', $array_value), $array_placeholder_values);
+        return array('UPDATE ' . self::quoteIdentifier($table) . ' SET ' . implode(', ', $array_value), $array_placeholder_values);
     }
 
 
@@ -299,6 +333,7 @@ class Db
     public function delete($table, $where)
     {
         $params = array();
+        $this->ensureWhereNotEmpty($where, 'Delete');
         $whereClause = $this->buildWhereClause($where, $params);
         return $this->exec($this->getQueryDelete($table) . $whereClause, $params);
     }
@@ -306,6 +341,7 @@ class Db
     public function update($table, $values, $where)
     {
         $params = array();
+        $this->ensureWhereNotEmpty($where, 'Update');
         $whereClause = $this->buildWhereClause($where, $params);
         list($queryUpdate, $updateParams) = $this->getQueryUpdate($table, $values);
         $query = $queryUpdate . $whereClause;
